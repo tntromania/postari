@@ -1,0 +1,69 @@
+# ══════════════════════════════════════════════════════════════
+# docker-compose.yml — Viralio Scheduler
+# Pentru dezvoltare locală: docker-compose up
+# Pe Coolify: adaugă Redis ca serviciu separat și conectează
+# ══════════════════════════════════════════════════════════════
+
+version: '3.9'
+
+services:
+
+  # ── App ──────────────────────────────────────────────────────
+  scheduler:
+    build: .
+    container_name: viralio-scheduler
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - NODE_ENV=production
+      - APP_URL=${APP_URL}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - HUB_URL=${HUB_URL}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - META_APP_ID=${META_APP_ID}
+      - META_APP_SECRET=${META_APP_SECRET}
+      - TIKTOK_CLIENT_KEY=${TIKTOK_CLIENT_KEY}
+      - TIKTOK_CLIENT_SECRET=${TIKTOK_CLIENT_SECRET}
+    volumes:
+      # Video-urile urcate se păstrează între restarts
+      - scheduler-uploads:/app/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - viralio-net
+
+  # ── Redis (Bull Queue) ────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: viralio-scheduler-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - scheduler-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout:  3s
+      retries:  5
+    networks:
+      - viralio-net
+    # Pe Coolify, expune portul doar dacă vrei acces din alte servicii
+    # ports:
+    #   - "6379:6379"
+
+volumes:
+  scheduler-uploads:
+    driver: local
+  scheduler-redis:
+    driver: local
+
+networks:
+  viralio-net:
+    driver: bridge

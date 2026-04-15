@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viralio Scheduler — Programează postări pe toate platformele</title>
+    <meta name="description" content="Programează automat postări video pe YouTube, Facebook, Instagram și TikTok dintr-un singur loc.">
+    <meta name="theme-color" content="#09090b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        zinc: {
+                            950: '#09090b', 900: '#18181b', 800: '#27272a',
+                            700: '#3f3f46', 600: '#52525b', 400: '#a1a1aa', 300: '#d4d4d8'
+                        },
+                        indigo: { 500: '#6366f1', 600: '#4f46e5' },
+                        pink:   { 500: '#ec4899' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-zinc-950 text-white font-sans min-h-screen">
+
+<!-- ══ HEADER ═══════════════════════════════════════════════ -->
+<header class="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <!-- Logo -->
+        <a href="https://viralio.ro" class="flex items-center gap-2 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-gradient-viralio flex items-center justify-center">
+                <i class="fa-solid fa-calendar-check text-white text-sm"></i>
+            </div>
+            <span class="font-bold text-white text-sm">Viralio <span class="text-indigo-400">Scheduler</span></span>
+        </a>
+
+        <!-- Nav tabs -->
+        <nav class="hidden sm:flex items-center gap-1 bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+            <button onclick="switchTab('new')" id="tab-new" class="tab-btn active-tab px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                <i class="fa-solid fa-plus mr-1.5"></i>Postare nouă
+            </button>
+            <button onclick="switchTab('scheduled')" id="tab-scheduled" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-clock mr-1.5"></i>Programate
+            </button>
+            <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-list-check mr-1.5"></i>Istoric
+            </button>
+            <button onclick="switchTab('accounts')" id="tab-accounts" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-link mr-1.5"></i>Conturi
+            </button>
+        </nav>
+
+        <!-- User info -->
+        <div class="flex items-center gap-3 shrink-0">
+            <div id="credits-badge" class="hidden items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm">
+                <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
+                <span id="credits-count" class="text-white font-medium">—</span>
+                <span class="text-zinc-500 text-xs">credite</span>
+            </div>
+            <div id="user-avatar" class="hidden w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700">
+                <img id="user-pic" src="" alt="" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile nav -->
+    <div class="sm:hidden flex border-t border-zinc-800 bg-zinc-950">
+        <button onclick="switchTab('new')"       id="mob-tab-new"       class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-indigo-400 border-b-2 border-indigo-500"><i class="fa-solid fa-plus text-base"></i>Nou</button>
+        <button onclick="switchTab('scheduled')" id="mob-tab-scheduled" class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-clock text-base"></i>Programate</button>
+        <button onclick="switchTab('history')"   id="mob-tab-history"   class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-list-check text-base"></i>Istoric</button>
+        <button onclick="switchTab('accounts')"  id="mob-tab-accounts"  class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-link text-base"></i>Conturi</button>
+    </div>
+</header>
+
+<!-- ══ TOAST ════════════════════════════════════════════════ -->
+<div id="toast" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- ══ MAIN CONTENT ═════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- ─── TAB: Postare Nouă ─────────────────────────────── -->
+    <div id="view-new" class="view-panel">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <!-- Left: Upload + Details -->
+            <div class="lg:col-span-3 flex flex-col gap-5">
+
+                <!-- Upload Video -->
+                <div class="card">
+                    <h2 class="section-title"><i class="fa-solid fa-video mr-2 text-indigo-400"></i>Video</h2>
+
+                    <!-- Drop zone -->
+                    <div id="drop-zone" class="drop-zone" onclick="document.getElementById('video-input').click()">
+                        <div id="drop-empty">
+                            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400"></i>
+                            </div>
+                            <p class="font-semibold text-white mb-1">Trage video-ul aici</p>
+                            <p class="text-zinc-500 text-sm">sau click pentru a selecta</p>
+                            <p class="text-zinc-600 text-xs mt-3">MP4, MOV, AVI, WebM · max 500MB</p>
+                        </div>
+                        <div id="drop-preview" class="hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-film text-xl text-indigo-400"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p id="file-name" class="font-medium text-white truncate text-sm"></p>
+                                    <p id="file-size" class="text-zinc-500 text-xs mt-0.5"></p>
+                                </div>
+                                <button onclick="clearVideo(event)" class="ml-auto p-2 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-red-400 transition-colors shrink-0">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <!-- Upload progress -->
+                            <div id="upload-progress" class="hidden mt-3">
+                                <div class="flex justify-between text-xs text-zinc-500 mb-1">
+                                    <span>Se încarcă...</span>
+                                    <span id="progress-pct">0%</span>
+                                </div>
+                                <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                    <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full transition-all duration-300" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div id="upload-done" class="hidden mt-3 flex items-center gap-2 text-xs text-emerald-400">
+                                <i class="fa-solid fa-circle-check"></i> Video încărcat cu succes
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="video-input" accept="video/*" class="hidden" onchange="handleFileSelect(this)">
+                </div>
+
+                <!-- Post Details -->
+                <div class="card">
+                    <h2 class="section-title"><i class="fa-solid fa-pen-line mr-2 text-indigo-400"></i>Detalii postare</h2>
+
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <label class="field-label">Titlu</label>
+                            <input type="text" id="post-title" placeholder="Titlul video-ului tău..." maxlength="150"
+                                   class="field-input" oninput="updatePreview()">
+                            <p class="text-zinc-600 text-xs mt-1 text-right"><span id="title-count">0</span>/150</p>
+                        </div>
+
+                        <div>
+                            <label class="field-label">Descriere</label>
+                            <textarea id="post-desc" rows="4" placeholder="Descrie conținutul video-ului..."
+                                      class="field-input resize-none" oninput="updatePreview()"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="field-label">Hashtag-uri</label>
+                            <div id="hashtag-container" class="hashtag-container" onclick="document.getElementById('hashtag-input').focus()">
+                                <span id="hashtags-display" class="flex flex-wrap gap-1.5"></span>
+                                <input type="text" id="hashtag-input" placeholder="#adaugă hashtag..."
+                                       class="bg-transparent outline-none text-sm text-white placeholder-zinc-600 flex-1 min-w-[120px]"
+                                       onkeydown="handleHashtagKey(event)" oninput="this.style.width = (this.value.length + 3) + 'ch'">
+                            </div>
+                            <p class="text-zinc-600 text-xs mt-1">Apasă Enter sau Space pentru a adăuga</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Platforms + Schedule + Submit -->
+            <div class="lg:col-span-2 flex flex-col gap-5">
+
+                <!-- Platform selector -->
+                <div class="card">
+                    <h2 class="section-title"><i class="fa-solid fa-share-nodes mr-2 text-indigo-400"></i>Platforme</h2>
+                    <p class="text-zinc-500 text-xs mb-4">1 credit per platformă selectată</p>
+
+                    <div id="platform-list" class="flex flex-col gap-3">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="card">
+                    <h2 class="section-title"><i class="fa-solid fa-calendar-days mr-2 text-indigo-400"></i>Data publicării</h2>
+
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="field-label">Data</label>
+                            <input type="date" id="schedule-date" class="field-input" min="">
+                        </div>
+                        <div>
+                            <label class="field-label">Ora</label>
+                            <input type="time" id="schedule-time" class="field-input" value="09:00">
+                        </div>
+                    </div>
+
+                    <!-- Quick presets -->
+                    <div class="mt-4">
+                        <p class="field-label mb-2">Programări rapide</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setQuickDate(0, 9)"  class="preset-btn">Azi 09:00</button>
+                            <button onclick="setQuickDate(0, 12)" class="preset-btn">Azi 12:00</button>
+                            <button onclick="setQuickDate(0, 18)" class="preset-btn">Azi 18:00</button>
+                            <button onclick="setQuickDate(1, 9)"  class="preset-btn">Mâine 09:00</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost summary -->
+                <div id="cost-summary" class="hidden card bg-zinc-900/50 border-indigo-500/20">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-zinc-400">Cost total</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
+                            <span id="cost-value" class="font-bold text-white">0</span>
+                            <span class="text-zinc-500 text-xs">credite</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-xs text-zinc-500">
+                        <span>Credite disponibile</span>
+                        <span id="available-credits">—</span>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button id="submit-btn" onclick="submitPost()" class="submit-btn" disabled>
+                    <i class="fa-solid fa-calendar-plus mr-2"></i>
+                    Programează postarea
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── TAB: Programate ───────────────────────────────── -->
+    <div id="view-scheduled" class="view-panel hidden">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-xl font-bold text-white">Postări programate</h1>
+                <p class="text-zinc-500 text-sm mt-1">Postări în așteptare</p>
+            </div>
+            <button onclick="switchTab('new')" class="btn-primary text-sm">
+                <i class="fa-solid fa-plus mr-2"></i>Postare nouă
+            </button>
+        </div>
+        <div id="scheduled-list" class="flex flex-col gap-4">
+            <div class="loading-placeholder">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── TAB: Istoric ──────────────────────────────────── -->
+    <div id="view-history" class="view-panel hidden">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-xl font-bold text-white">Istoricul postărilor</h1>
+                <p class="text-zinc-500 text-sm mt-1">Postări publicate și eșuate</p>
+            </div>
+        </div>
+        <div id="history-list" class="flex flex-col gap-4">
+            <div class="loading-placeholder">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── TAB: Conturi ──────────────────────────────────── -->
+    <div id="view-accounts" class="view-panel hidden">
+        <div class="mb-6">
+            <h1 class="text-xl font-bold text-white">Conturi conectate</h1>
+            <p class="text-zinc-500 text-sm mt-1">Conectează platformele pe care vrei să postezi</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <!-- YouTube -->
+            <div class="platform-card" id="card-youtube">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="platform-icon bg-red-500/10">
+                        <i class="fab fa-youtube text-xl text-red-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white">YouTube</p>
+                        <p id="yt-info" class="text-zinc-500 text-xs mt-0.5">Neconectat</p>
+                    </div>
+                    <div id="yt-status" class="status-dot bg-zinc-700"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="yt-connect-btn"    onclick="connectPlatform('youtube')"    class="btn-connect flex-1">
+                        <i class="fa-solid fa-link mr-1.5"></i>Conectează
+                    </button>
+                    <button id="yt-disconnect-btn" onclick="disconnectPlatform('youtube')" class="btn-disconnect hidden flex-1">
+                        <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
+                    </button>
+                </div>
+                <p class="text-zinc-600 text-xs mt-3">Postează direct pe canalul tău YouTube</p>
+            </div>
+
+            <!-- Facebook -->
+            <div class="platform-card" id="card-facebook">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="platform-icon bg-blue-500/10">
+                        <i class="fab fa-facebook text-xl text-blue-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white">Facebook</p>
+                        <p id="fb-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită pagină Business</p>
+                    </div>
+                    <div id="fb-status" class="status-dot bg-zinc-700"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="fb-connect-btn"    onclick="connectPlatform('facebook')"    class="btn-connect flex-1">
+                        <i class="fa-solid fa-link mr-1.5"></i>Conectează
+                    </button>
+                    <button id="fb-disconnect-btn" onclick="disconnectPlatform('facebook')" class="btn-disconnect hidden flex-1">
+                        <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
+                    </button>
+                </div>
+                <p class="text-zinc-600 text-xs mt-3">Postează pe pagina ta de Facebook</p>
+            </div>
+
+            <!-- Instagram -->
+            <div class="platform-card" id="card-instagram">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="platform-icon" style="background:rgba(225,48,108,0.1)">
+                        <i class="fab fa-instagram text-xl" style="color:#e1306c"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white">Instagram</p>
+                        <p id="ig-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită cont Business</p>
+                    </div>
+                    <div id="ig-status" class="status-dot bg-zinc-700"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="ig-connect-btn"    onclick="connectPlatform('facebook')"    class="btn-connect flex-1">
+                        <i class="fa-solid fa-link mr-1.5"></i>Conectează via Meta
+                    </button>
+                    <button id="ig-disconnect-btn" onclick="disconnectPlatform('instagram')" class="btn-disconnect hidden flex-1">
+                        <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
+                    </button>
+                </div>
+                <p class="text-zinc-600 text-xs mt-3">Se conectează automat cu Facebook dacă ai contul Business legat</p>
+            </div>
+
+            <!-- TikTok -->
+            <div class="platform-card" id="card-tiktok">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="platform-icon bg-zinc-800">
+                        <i class="fab fa-tiktok text-xl text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white">TikTok</p>
+                        <p id="tt-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită aprobare TikTok</p>
+                    </div>
+                    <div id="tt-status" class="status-dot bg-zinc-700"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="tt-connect-btn"    onclick="connectPlatform('tiktok')"    class="btn-connect flex-1">
+                        <i class="fa-solid fa-link mr-1.5"></i>Conectează
+                    </button>
+                    <button id="tt-disconnect-btn" onclick="disconnectPlatform('tiktok')" class="btn-disconnect hidden flex-1">
+                        <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
+                    </button>
+                </div>
+                <p class="text-zinc-600 text-xs mt-3">Postează Reels pe contul tău TikTok</p>
+            </div>
+        </div>
+
+        <!-- Note -->
+        <div class="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+            <div class="flex gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5 shrink-0"></i>
+                <div class="text-sm text-zinc-400">
+                    <p class="font-medium text-amber-400 mb-1">Cerințe platforme</p>
+                    <ul class="space-y-1 text-zinc-500 text-xs">
+                        <li>• <strong class="text-zinc-400">YouTube:</strong> Cont Google cu canal YouTube activ</li>
+                        <li>• <strong class="text-zinc-400">Facebook:</strong> Pagină Business (nu profil personal)</li>
+                        <li>• <strong class="text-zinc-400">Instagram:</strong> Cont Professional/Business legat de Pagina FB</li>
+                        <li>• <strong class="text-zinc-400">TikTok:</strong> Aplicație TikTok Developer cu Content Posting API aprobat</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ══ CONFIRM DIALOG ════════════════════════════════════════ -->
+<div id="confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white text-center mb-2" id="confirm-title">Ești sigur?</h3>
+        <p class="text-zinc-400 text-sm text-center mb-6" id="confirm-msg"></p>
+        <div class="flex gap-3">
+            <button onclick="closeConfirm()" class="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors">Anulează</button>
+            <button id="confirm-ok" class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors">Șterge</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// VIRALIO SCHEDULER — Client-side JS
+// ══════════════════════════════════════════════════════════════
+
+const API     = '';
+const token   = localStorage.getItem('viralio_token') || sessionStorage.getItem('viralio_token') || '';
+const apiFetch = async (url, opts = {}) => {
+    const res  = await fetch(API + url, {
+        ...opts,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+};
+
+// ── State ────────────────────────────────────────────────────
+let state = {
+    videoPath:   null,
+    videoName:   null,
+    videoSize:   null,
+    hashtags:    [],
+    platforms:   [],           // selected
+    connectedAccounts: {},
+    credits:     null
+};
+
+// ── Platforms config ─────────────────────────────────────────
+const PLATFORMS = [
+    { id: 'youtube',   label: 'YouTube',   icon: 'fab fa-youtube',   color: 'text-red-500',   bg: 'bg-red-500/10' },
+    { id: 'facebook',  label: 'Facebook',  icon: 'fab fa-facebook',  color: 'text-blue-500',  bg: 'bg-blue-500/10' },
+    { id: 'instagram', label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-500',  bg: 'bg-pink-500/10' },
+    { id: 'tiktok',    label: 'TikTok',    icon: 'fab fa-tiktok',    color: 'text-white',     bg: 'bg-zinc-800' },
+];
+
+// ── Init ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('schedule-date').min = today;
+    document.getElementById('schedule-date').value = today;
+
+    renderPlatformList();
+    checkURLParams();
+    if (token) loadUserData();
+    else showToast('Logare necesară. Redirect...', 'error');
+});
+
+async function loadUserData() {
+    try {
+        const [creditsData, accountsData] = await Promise.all([
+            apiFetch('/api/credits-info').catch(() => null),
+            apiFetch('/api/accounts')
+        ]);
+
+        // Credits via hub
+        if (creditsData) {
+            state.credits = creditsData.credits;
+            document.getElementById('credits-count').textContent = creditsData.credits;
+            document.getElementById('credits-badge').classList.remove('hidden');
+            document.getElementById('credits-badge').classList.add('flex');
+        }
+
+        // Accounts
+        state.connectedAccounts = {};
+        accountsData.accounts.forEach(a => state.connectedAccounts[a.platform] = a);
+
+        // Show user pic if available
+        const anyAccount = accountsData.accounts[0];
+        if (anyAccount?.picture) {
+            document.getElementById('user-pic').src = anyAccount.picture;
+            document.getElementById('user-avatar').classList.remove('hidden');
+            document.getElementById('user-avatar').classList.add('flex');
+        }
+
+        renderPlatformList();
+        updateAccountsTab();
+    } catch (err) {
+        console.warn('loadUserData error:', err.message);
+    }
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(tab) {
+    document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`view-${tab}`).classList.remove('hidden');
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active-tab');
+        btn.classList.add('text-zinc-400');
+    });
+    const activeBtn = document.getElementById(`tab-${tab}`);
+    if (activeBtn) { activeBtn.classList.add('active-tab'); activeBtn.classList.remove('text-zinc-400'); }
+
+    // Mobile tabs
+    document.querySelectorAll('.mob-tab').forEach(btn => {
+        btn.classList.remove('text-indigo-400', 'border-indigo-500');
+        btn.classList.add('text-zinc-500', 'border-transparent');
+    });
+    const mobActive = document.getElementById(`mob-tab-${tab}`);
+    if (mobActive) { mobActive.classList.add('text-indigo-400', 'border-indigo-500'); mobActive.classList.remove('text-zinc-500', 'border-transparent'); }
+
+    if (tab === 'scheduled' || tab === 'history') loadPosts(tab);
+    if (tab === 'accounts') updateAccountsTab();
+}
+
+// ── URL params (OAuth callbacks) ─────────────────────────────
+function checkURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const error     = params.get('error');
+
+    if (connected) {
+        showToast(`✅ ${connected.charAt(0).toUpperCase() + connected.slice(1)} conectat cu succes!`, 'success');
+        history.replaceState({}, '', window.location.pathname);
+        loadUserData();
+        switchTab('accounts');
+    }
+    if (error) {
+        showToast(`❌ Eroare la conectare ${error}. Încearcă din nou.`, 'error');
+        history.replaceState({}, '', window.location.pathname);
+    }
+}
+
+// ══ PLATFORM LIST ════════════════════════════════════════════
+function renderPlatformList() {
+    const container = document.getElementById('platform-list');
+    container.innerHTML = PLATFORMS.map(p => {
+        const connected = !!state.connectedAccounts[p.id];
+        const selected  = state.platforms.includes(p.id);
+        const account   = state.connectedAccounts[p.id];
+        const name      = account?.channelName || (connected ? 'Conectat' : 'Neconectat');
+
+        return `
+        <div class="platform-row ${selected ? 'platform-row-active' : ''} ${!connected ? 'opacity-50' : ''}"
+             onclick="${connected ? `togglePlatform('${p.id}')` : `showToast('Conectează mai întâi ${p.label} din tab-ul Conturi', 'warning')`}"
+             title="${!connected ? 'Conectează contul mai întâi' : ''}">
+            <div class="platform-icon-sm ${p.bg}">
+                <i class="${p.icon} ${p.color} text-sm"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-white">${p.label}</p>
+                <p class="text-xs text-zinc-500">${connected ? name : 'Neconectat'}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                ${!connected ? '<span class="text-xs text-zinc-600 bg-zinc-800 rounded px-2 py-0.5">Conectează</span>' : ''}
+                <div class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
+                    ${selected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-700 bg-transparent'}">
+                    ${selected ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    updateCostSummary();
+    validateForm();
+}
+
+function togglePlatform(id) {
+    if (state.platforms.includes(id)) {
+        state.platforms = state.platforms.filter(p => p !== id);
+    } else {
+        state.platforms.push(id);
+    }
+    renderPlatformList();
+}
+
+// ══ VIDEO UPLOAD ═════════════════════════════════════════════
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drop-zone-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-zone-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drop-zone-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+function handleFileSelect(input) {
+    if (input.files[0]) processFile(input.files[0]);
+}
+
+function processFile(file) {
+    if (!file.type.startsWith('video/')) { showToast('Doar fișiere video acceptate', 'error'); return; }
+    if (file.size > 500 * 1024 * 1024)  { showToast('Fișierul depășește limita de 500MB', 'error'); return; }
+
+    document.getElementById('drop-empty').classList.add('hidden');
+    document.getElementById('drop-preview').classList.remove('hidden');
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-size').textContent = formatBytes(file.size);
+
+    uploadFile(file);
+}
+
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('video', file);
+
+    document.getElementById('upload-progress').classList.remove('hidden');
+    document.getElementById('upload-done').classList.add('hidden');
+
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+        xhr.upload.onprogress = e => {
+            if (e.lengthComputable) {
+                const pct = Math.round(e.loaded / e.total * 100);
+                document.getElementById('progress-bar').style.width = pct + '%';
+                document.getElementById('progress-pct').textContent  = pct + '%';
+            }
+        };
+
+        xhr.onload = () => {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status === 200) {
+                state.videoPath = data.videoPath;
+                state.videoName = data.videoName;
+                state.videoSize = data.videoSize;
+                document.getElementById('upload-progress').classList.add('hidden');
+                document.getElementById('upload-done').classList.remove('hidden');
+                validateForm();
+            } else {
+                showToast(data.error || 'Eroare la upload', 'error');
+                clearVideo();
+            }
+        };
+        xhr.onerror = () => { showToast('Eroare de rețea la upload', 'error'); clearVideo(); };
+        xhr.send(formData);
+    } catch (err) {
+        showToast('Eroare la upload: ' + err.message, 'error');
+    }
+}
+
+function clearVideo(e) {
+    if (e) e.stopPropagation();
+    state.videoPath = null;
+    state.videoName = null;
+    state.videoSize = null;
+    document.getElementById('drop-empty').classList.remove('hidden');
+    document.getElementById('drop-preview').classList.add('hidden');
+    document.getElementById('upload-progress').classList.add('hidden');
+    document.getElementById('upload-done').classList.add('hidden');
+    document.getElementById('video-input').value = '';
+    validateForm();
+}
+
+// ══ HASHTAGS ═════════════════════════════════════════════════
+function handleHashtagKey(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        addHashtag(e.target.value.trim());
+        e.target.value = '';
+    } else if (e.key === 'Backspace' && e.target.value === '' && state.hashtags.length) {
+        state.hashtags.pop();
+        renderHashtags();
+    }
+}
+
+function addHashtag(tag) {
+    if (!tag) return;
+    if (!tag.startsWith('#')) tag = '#' + tag;
+    tag = tag.replace(/[^#\w]/g, '').toLowerCase();
+    if (tag.length < 2 || state.hashtags.includes(tag) || state.hashtags.length >= 30) return;
+    state.hashtags.push(tag);
+    renderHashtags();
+}
+
+function renderHashtags() {
+    const container = document.getElementById('hashtags-display');
+    container.innerHTML = state.hashtags.map((h, i) => `
+        <span class="hashtag-pill">
+            ${h}
+            <button onclick="removeHashtag(${i})" class="ml-1 hover:text-white transition-colors">×</button>
+        </span>`).join('');
+}
+
+function removeHashtag(i) {
+    state.hashtags.splice(i, 1);
+    renderHashtags();
+}
+
+// ══ SCHEDULE PRESETS ═════════════════════════════════════════
+function setQuickDate(daysFromNow, hour) {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromNow);
+    d.setHours(hour, 0, 0, 0);
+    if (d <= new Date()) { showToast('Ora selectată este în trecut', 'warning'); return; }
+    document.getElementById('schedule-date').value = d.toISOString().split('T')[0];
+    document.getElementById('schedule-time').value = `${String(hour).padStart(2, '0')}:00`;
+}
+
+// ══ COST SUMMARY ═════════════════════════════════════════════
+function updateCostSummary() {
+    const cost = state.platforms.length;
+    const el   = document.getElementById('cost-summary');
+
+    if (cost > 0) {
+        el.classList.remove('hidden');
+        document.getElementById('cost-value').textContent      = cost;
+        document.getElementById('available-credits').textContent = state.credits !== null ? state.credits : '—';
+    } else {
+        el.classList.add('hidden');
+    }
+}
+
+// ══ FORM VALIDATION ══════════════════════════════════════════
+function validateForm() {
+    const hasVideo     = !!state.videoPath;
+    const hasPlatforms = state.platforms.length > 0;
+    const hasDate      = !!document.getElementById('schedule-date').value;
+    const btn          = document.getElementById('submit-btn');
+    btn.disabled       = !(hasVideo && hasPlatforms && hasDate);
+}
+
+function updatePreview() {
+    const title = document.getElementById('post-title').value;
+    document.getElementById('title-count').textContent = title.length;
+}
+
+// ══ SUBMIT ═══════════════════════════════════════════════════
+async function submitPost() {
+    const title       = document.getElementById('post-title').value.trim();
+    const description = document.getElementById('post-desc').value.trim();
+    const dateVal     = document.getElementById('schedule-date').value;
+    const timeVal     = document.getElementById('schedule-time').value || '09:00';
+
+    if (!state.videoPath)      { showToast('Încarcă un video mai întâi', 'error'); return; }
+    if (!state.platforms.length) { showToast('Selectează cel puțin o platformă', 'error'); return; }
+    if (!dateVal)              { showToast('Selectează data publicării', 'error'); return; }
+
+    const scheduledAt = new Date(`${dateVal}T${timeVal}:00`);
+    if (scheduledAt <= new Date()) { showToast('Data trebuie să fie în viitor', 'error'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled   = true;
+    btn.innerHTML  = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Se programează...';
+
+    try {
+        await apiFetch('/api/posts', {
+            method: 'POST',
+            body: JSON.stringify({
+                title:       title || 'Postare Viralio',
+                description,
+                hashtags:    state.hashtags,
+                videoPath:   state.videoPath,
+                videoName:   state.videoName,
+                videoSize:   state.videoSize,
+                platforms:   state.platforms,
+                scheduledAt: scheduledAt.toISOString()
+            })
+        });
+
+        showToast(`🎉 Postarea a fost programată pentru ${formatDate(scheduledAt)}!`, 'success');
+        resetForm();
+        if (state.credits !== null) {
+            state.credits -= state.platforms.length;
+            document.getElementById('credits-count').textContent = state.credits;
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fa-solid fa-calendar-plus mr-2"></i>Programează postarea';
+        validateForm();
+    }
+}
+
+function resetForm() {
+    clearVideo();
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-desc').value  = '';
+    document.getElementById('title-count').textContent = '0';
+    state.hashtags  = [];
+    state.platforms = [];
+    renderHashtags();
+    renderPlatformList();
+}
+
+// ══ POSTS LIST ════════════════════════════════════════════════
+async function loadPosts(tab) {
+    const listEl = document.getElementById(`${tab}-list`);
+    listEl.innerHTML = '<div class="loading-placeholder"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i></div>';
+
+    try {
+        const { posts } = await apiFetch('/api/posts');
+        const filterStatuses = tab === 'scheduled'
+            ? ['scheduled', 'posting']
+            : ['completed', 'partial', 'failed', 'cancelled'];
+
+        const filtered = posts.filter(p => filterStatuses.includes(p.status));
+
+        if (!filtered.length) {
+            listEl.innerHTML = `
+                <div class="text-center py-16 text-zinc-600">
+                    <i class="fa-solid fa-${tab === 'scheduled' ? 'clock' : 'check-circle'} text-4xl mb-4 block opacity-30"></i>
+                    <p class="font-medium">${tab === 'scheduled' ? 'Nu ai postări programate' : 'Niciun post în istoric'}</p>
+                    ${tab === 'scheduled' ? '<button onclick="switchTab(\'new\')" class="mt-4 btn-primary text-sm">Programează primul post</button>' : ''}
+                </div>`;
+            return;
+        }
+
+        listEl.innerHTML = filtered.map(post => renderPostCard(post)).join('');
+    } catch (err) {
+        listEl.innerHTML = `<div class="text-center py-8 text-red-400"><i class="fa-solid fa-exclamation-circle mr-2"></i>${err.message}</div>`;
+    }
+}
+
+function renderPostCard(post) {
+    const statusMap = {
+        scheduled:  { label: 'Programat',  cls: 'status-scheduled', icon: 'fa-clock' },
+        posting:    { label: 'Se publică', cls: 'status-posting',   icon: 'fa-circle-notch fa-spin' },
+        completed:  { label: 'Publicat',   cls: 'status-completed', icon: 'fa-check-circle' },
+        partial:    { label: 'Parțial',    cls: 'status-partial',   icon: 'fa-exclamation-circle' },
+        failed:     { label: 'Eșuat',      cls: 'status-failed',    icon: 'fa-times-circle' },
+        cancelled:  { label: 'Anulat',     cls: 'status-failed',    icon: 'fa-ban' }
+    };
+    const s = statusMap[post.status] || statusMap.scheduled;
+
+    const platformIcons = {
+        youtube: '<i class="fab fa-youtube text-red-500"></i>',
+        facebook: '<i class="fab fa-facebook text-blue-500"></i>',
+        instagram: '<i class="fab fa-instagram text-pink-500"></i>',
+        tiktok: '<i class="fab fa-tiktok text-white"></i>'
+    };
+
+    const canDelete = ['scheduled', 'failed', 'cancelled', 'partial'].includes(post.status);
+
+    return `
+    <div class="post-card" id="post-${post._id}">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-film text-indigo-400"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-semibold text-white text-sm truncate">${escHtml(post.title)}</h3>
+                    <span class="badge ${s.cls}"><i class="fa-solid ${s.icon} mr-1"></i>${s.label}</span>
+                </div>
+                <div class="flex items-center gap-3 mt-1.5 text-xs text-zinc-500">
+                    <span><i class="fa-regular fa-calendar mr-1"></i>${formatDate(new Date(post.scheduledAt))}</span>
+                    <span><i class="fa-solid fa-file-video mr-1"></i>${post.videoName || 'video.mp4'}</span>
+                </div>
+                <!-- Platform statuses -->
+                <div class="flex flex-wrap gap-2 mt-2.5">
+                    ${post.platforms.map(p => `
+                        <div class="flex items-center gap-1 text-xs rounded-lg px-2 py-1 bg-zinc-800 border border-zinc-700">
+                            ${platformIcons[p.name] || p.name}
+                            <span class="text-zinc-400 ml-1">${p.name}</span>
+                            ${p.status === 'posted'  ? '<i class="fa-solid fa-check text-emerald-400 ml-1"></i>' : ''}
+                            ${p.status === 'failed'  ? '<i class="fa-solid fa-times text-red-400 ml-1" title="' + escHtml(p.error || '') + '"></i>' : ''}
+                            ${p.status === 'pending' ? '<i class="fa-solid fa-clock text-zinc-500 ml-1"></i>' : ''}
+                            ${p.status === 'posting' ? '<i class="fa-solid fa-circle-notch fa-spin text-indigo-400 ml-1"></i>' : ''}
+                        </div>`).join('')}
+                </div>
+            </div>
+            ${canDelete ? `
+            <button onclick="confirmDelete('${post._id}')" class="p-2 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-red-400 transition-colors shrink-0" title="Șterge postarea">
+                <i class="fa-solid fa-trash text-sm"></i>
+            </button>` : ''}
+        </div>
+    </div>`;
+}
+
+// ══ DELETE POST ═══════════════════════════════════════════════
+let pendingDeleteId = null;
+function confirmDelete(postId) {
+    pendingDeleteId = postId;
+    document.getElementById('confirm-title').textContent = 'Șterge postarea?';
+    document.getElementById('confirm-msg').textContent   = 'Dacă postarea e programată, va fi anulată și creditele vor fi rambursate.';
+    document.getElementById('confirm-modal').classList.remove('hidden');
+    document.getElementById('confirm-ok').onclick = doDelete;
+}
+function closeConfirm() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+    pendingDeleteId = null;
+}
+async function doDelete() {
+    if (!pendingDeleteId) return;
+    closeConfirm();
+    try {
+        await apiFetch(`/api/posts/${pendingDeleteId}`, { method: 'DELETE' });
+        document.getElementById(`post-${pendingDeleteId}`)?.remove();
+        showToast('Postarea a fost ștearsă', 'success');
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+// ══ ACCOUNTS ══════════════════════════════════════════════════
+function updateAccountsTab() {
+    const platforms = ['youtube', 'facebook', 'instagram', 'tiktok'];
+    const infoMap   = { youtube: 'yt', facebook: 'fb', instagram: 'ig', tiktok: 'tt' };
+
+    platforms.forEach(p => {
+        const acc      = state.connectedAccounts[p];
+        const prefix   = infoMap[p];
+        const infoEl   = document.getElementById(`${prefix}-info`);
+        const statusEl = document.getElementById(`${prefix}-status`);
+        const connectBtn    = document.getElementById(`${prefix}-connect-btn`);
+        const disconnectBtn = document.getElementById(`${prefix}-disconnect-btn`);
+
+        if (acc) {
+            infoEl.textContent = acc.channelName || 'Conectat';
+            statusEl.classList.remove('bg-zinc-700');
+            statusEl.classList.add('bg-emerald-500');
+            connectBtn.classList.add('hidden');
+            disconnectBtn.classList.remove('hidden');
+        } else {
+            infoEl.textContent = p === 'instagram' ? 'Neconectat · necesită cont Business' :
+                                  p === 'facebook'  ? 'Neconectat · necesită pagină Business' :
+                                  p === 'tiktok'    ? 'Neconectat · necesită aprobare TikTok' : 'Neconectat';
+            statusEl.classList.remove('bg-emerald-500');
+            statusEl.classList.add('bg-zinc-700');
+            connectBtn.classList.remove('hidden');
+            disconnectBtn.classList.add('hidden');
+        }
+    });
+}
+
+async function connectPlatform(platform) {
+    try {
+        const { url } = await apiFetch(`/api/auth/${platform}`);
+        window.location.href = url;
+    } catch (err) {
+        showToast(`Eroare la conectare: ${err.message}`, 'error');
+    }
+}
+
+async function disconnectPlatform(platform) {
+    try {
+        await apiFetch(`/api/accounts/${platform}`, { method: 'DELETE' });
+        delete state.connectedAccounts[platform];
+        updateAccountsTab();
+        renderPlatformList();
+        showToast(`${platform.charAt(0).toUpperCase() + platform.slice(1)} deconectat`, 'success');
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+// ══ TOAST ═════════════════════════════════════════════════════
+function showToast(msg, type = 'info') {
+    const colors = {
+        success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+        error:   'border-red-500/30 bg-red-500/10 text-red-300',
+        warning: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
+        info:    'border-indigo-500/30 bg-indigo-500/10 text-indigo-300'
+    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-triangle-exclamation', info: 'fa-info-circle' };
+
+    const el = document.createElement('div');
+    el.className = `toast flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm max-w-xs pointer-events-auto ${colors[type]}`;
+    el.innerHTML = `<i class="fa-solid ${icons[type]} shrink-0"></i><span>${escHtml(msg)}</span>`;
+    document.getElementById('toast').appendChild(el);
+
+    setTimeout(() => { el.classList.add('toast-exit'); setTimeout(() => el.remove(), 300); }, 4000);
+}
+
+// ══ UTILS ═════════════════════════════════════════════════════
+function formatBytes(bytes) {
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatDate(date) {
+    return new Intl.DateTimeFormat('ro-RO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date));
+}
+
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
