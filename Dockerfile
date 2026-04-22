@@ -12,7 +12,7 @@ WORKDIR /app
 
 # Instalăm dependențele mai întâi (cache layer)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copiem codul
 COPY . .
