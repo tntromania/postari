@@ -687,7 +687,7 @@ async function uploadFile(file) {
     try {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/upload');
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
 
         xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
