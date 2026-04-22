@@ -32,18 +32,35 @@
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen">
 
-<!-- ══ HEADER ═══════════════════════════════════════════════ -->
-<header class="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+<!-- ══ LOGIN MODAL (redirect to Hub) ═════════════════════════ -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(9,9,11,0.75);backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;" class="flex">
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:24px;padding:36px;text-align:center;max-width:400px;width:90%;">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-3xl mx-auto mb-4">
+            <i class="fas fa-fingerprint"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold mb-2 text-white">Intră în cont</h2>
+        <p class="text-zinc-400 text-sm mb-6">Trebuie să fii logat pe Viralio pentru a folosi Scheduler-ul.</p>
+        <a href="https://hub.viralio.ro/login?redirect=https://scheduler.viralio.ro"
+           class="block w-full py-3 rounded-xl font-bold text-white text-sm"
+           style="background:linear-gradient(135deg,#4f46e5,#6366f1);">
+            <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Loghează-te pe Viralio
+        </a>
+        <p class="text-zinc-600 text-xs mt-4">Contul tău de pe hub.viralio.ro funcționează pe toate aplicațiile.</p>
+    </div>
+</div>
+
+<!-- ══ HEADER — bara Viralio standard ══════════════════════════ -->
+<div class="sticky top-0 z-50 flex w-full justify-center px-2 py-4 md:p-2 max-w-screen-2xl mx-auto">
+    <nav class="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 backdrop-blur-xl md:mx-12 shadow-sm px-5 md:px-8 py-3 flex justify-between items-center">
         <!-- Logo -->
-        <a href="https://viralio.ro" class="flex items-center gap-2 shrink-0">
-            <div class="w-8 h-8 rounded-lg bg-gradient-viralio flex items-center justify-center">
-                <i class="fa-solid fa-calendar-check text-white text-sm"></i>
+        <a class="flex items-center font-black text-xl tracking-tight text-white" href="https://viralio.ro">
+            <div class="w-9 h-9 rounded-xl bg-gradient-viralio flex items-center justify-center text-white mr-2.5 shadow-md">
+                <i class="fa-solid fa-bolt"></i>
             </div>
-            <span class="font-bold text-white text-sm">Viralio <span class="text-indigo-400">Scheduler</span></span>
+            Viralio <span class="text-sm font-medium text-zinc-500 ml-2 border-l border-zinc-700 pl-2 mt-1">Scheduler</span>
         </a>
 
-        <!-- Nav tabs -->
+        <!-- Desktop nav tabs -->
         <nav class="hidden sm:flex items-center gap-1 bg-zinc-900 rounded-xl p-1 border border-zinc-800">
             <button onclick="switchTab('new')" id="tab-new" class="tab-btn active-tab px-4 py-2 rounded-lg text-sm font-medium transition-all">
                 <i class="fa-solid fa-plus mr-1.5"></i>Postare nouă
@@ -59,27 +76,41 @@
             </button>
         </nav>
 
-        <!-- User info -->
-        <div class="flex items-center gap-3 shrink-0">
+        <!-- User zone -->
+        <div class="flex items-center justify-end gap-3">
+            <!-- Credits badge -->
             <div id="credits-badge" class="hidden items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm">
                 <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
                 <span id="credits-count" class="text-white font-medium">—</span>
                 <span class="text-zinc-500 text-xs">credite</span>
             </div>
-            <div id="user-avatar" class="hidden w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700">
-                <img id="user-pic" src="" alt="" class="w-full h-full object-cover">
+            <!-- Not logged in -->
+            <button onclick="document.getElementById('login-modal').style.display='flex'" id="login-top-btn"
+                class="px-5 py-2.5 bg-white text-slate-900 rounded-xl hover:bg-indigo-500 hover:text-white transition-all font-semibold shadow-md text-sm">
+                Conectează-te
+            </button>
+            <!-- Logged in -->
+            <div id="user-profile" class="hidden items-center bg-zinc-900 border border-zinc-800 py-1 pl-1.5 pr-1.5 rounded-full">
+                <img id="nav-avatar" src="" class="w-8 h-8 rounded-full border border-zinc-700">
+                <div class="flex flex-col leading-none ml-2 mr-2">
+                    <span id="nav-name" class="text-xs font-bold text-white mb-0.5"></span>
+                    <span class="text-[0.65rem] font-bold text-indigo-400"><span id="nav-credits-hub">0</span> Credite</span>
+                </div>
+                <button onclick="logout()" class="p-2 text-zinc-500 hover:text-red-400 transition-colors rounded-full hover:bg-zinc-800">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
             </div>
         </div>
-    </div>
+    </nav>
+</div>
 
-    <!-- Mobile nav -->
-    <div class="sm:hidden flex border-t border-zinc-800 bg-zinc-950">
-        <button onclick="switchTab('new')"       id="mob-tab-new"       class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-indigo-400 border-b-2 border-indigo-500"><i class="fa-solid fa-plus text-base"></i>Nou</button>
-        <button onclick="switchTab('scheduled')" id="mob-tab-scheduled" class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-clock text-base"></i>Programate</button>
-        <button onclick="switchTab('history')"   id="mob-tab-history"   class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-list-check text-base"></i>Istoric</button>
-        <button onclick="switchTab('accounts')"  id="mob-tab-accounts"  class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-link text-base"></i>Conturi</button>
-    </div>
-</header>
+<!-- Mobile nav tabs -->
+<div class="sm:hidden flex border-t border-zinc-800 bg-zinc-950 sticky top-[72px] z-40">
+    <button onclick="switchTab('new')"       id="mob-tab-new"       class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-indigo-400 border-b-2 border-indigo-500"><i class="fa-solid fa-plus text-base"></i>Nou</button>
+    <button onclick="switchTab('scheduled')" id="mob-tab-scheduled" class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-clock text-base"></i>Programate</button>
+    <button onclick="switchTab('history')"   id="mob-tab-history"   class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-list-check text-base"></i>Istoric</button>
+    <button onclick="switchTab('accounts')"  id="mob-tab-accounts"  class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-link text-base"></i>Conturi</button>
+</div>
 
 <!-- ══ TOAST ════════════════════════════════════════════════ -->
 <div id="toast" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
@@ -410,12 +441,40 @@
 // VIRALIO SCHEDULER — Client-side JS
 // ══════════════════════════════════════════════════════════════
 
-const API     = '';
-const token   = localStorage.getItem('viralio_token') || sessionStorage.getItem('viralio_token') || '';
+// ══ AUTH — cookie viralio_token (același ca pe tot ecosistemul Viralio) ══
+function getToken() {
+    const match = document.cookie.match(/(?:^|; )viralio_token=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+function removeToken() {
+    document.cookie = 'viralio_token=; domain=.viralio.ro; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+function logout() { removeToken(); location.reload(); }
+
+function updateNavUI(user) {
+    document.getElementById('login-top-btn')?.classList.add('hidden');
+    const prof = document.getElementById('user-profile');
+    if (prof) { prof.classList.remove('hidden'); prof.classList.add('flex'); }
+    if (user.name)    document.getElementById('nav-name').innerText   = user.name.split(' ')[0];
+    if (user.picture) document.getElementById('nav-avatar').src       = user.picture;
+    if (user.credits !== undefined) {
+        document.getElementById('nav-credits-hub').innerText = user.credits;
+        document.getElementById('credits-count').innerText   = user.credits;
+        const badge = document.getElementById('credits-badge');
+        badge.classList.remove('hidden'); badge.classList.add('flex');
+    }
+}
+
+const API      = '';
 const apiFetch = async (url, opts = {}) => {
+    const tok  = getToken();
     const res  = await fetch(API + url, {
         ...opts,
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+        headers: {
+            'Authorization': tok ? `Bearer ${tok}` : '',
+            'Content-Type': 'application/json',
+            ...(opts.headers || {})
+        }
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -450,41 +509,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderPlatformList();
     checkURLParams();
-    if (token) loadUserData();
-    else showToast('Logare necesară. Redirect...', 'error');
+    const tok = getToken();
+    if (tok) {
+        loadUserData();
+    } else {
+        document.getElementById('login-modal').style.display = 'flex';
+    }
 });
 
 async function loadUserData() {
     try {
+        // 1. Verificăm tokenul pe Hub și obținem datele userului pentru bara de nav
+        const tok = getToken();
+        if (tok) {
+            try {
+                const meRes = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${tok}` }
+                });
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    if (meData.user) updateNavUI(meData.user);
+                } else if (meRes.status === 401) {
+                    removeToken();
+                    document.getElementById('login-modal').style.display = 'flex';
+                    return;
+                }
+            } catch (e) { /* Hub temporar indisponibil, continuăm */ }
+        }
+
+        // 2. Date locale (conturi platforme + credite)
         const [creditsData, accountsData] = await Promise.all([
             apiFetch('/api/credits-info').catch(() => null),
             apiFetch('/api/accounts')
         ]);
 
-        // Credits via hub
         if (creditsData) {
             state.credits = creditsData.credits;
-            document.getElementById('credits-count').textContent = creditsData.credits;
-            document.getElementById('credits-badge').classList.remove('hidden');
-            document.getElementById('credits-badge').classList.add('flex');
+            document.getElementById('credits-count').textContent    = creditsData.credits;
+            document.getElementById('nav-credits-hub').textContent  = creditsData.credits;
+            const badge = document.getElementById('credits-badge');
+            badge.classList.remove('hidden'); badge.classList.add('flex');
         }
 
-        // Accounts
         state.connectedAccounts = {};
         accountsData.accounts.forEach(a => state.connectedAccounts[a.platform] = a);
-
-        // Show user pic if available
-        const anyAccount = accountsData.accounts[0];
-        if (anyAccount?.picture) {
-            document.getElementById('user-pic').src = anyAccount.picture;
-            document.getElementById('user-avatar').classList.remove('hidden');
-            document.getElementById('user-avatar').classList.add('flex');
-        }
 
         renderPlatformList();
         updateAccountsTab();
     } catch (err) {
         console.warn('loadUserData error:', err.message);
+        if (err.message.includes('401')) {
+            removeToken();
+            document.getElementById('login-modal').style.display = 'flex';
+        }
     }
 }
 

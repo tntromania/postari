@@ -110,6 +110,39 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ══════════════════════════════════════════════════════════════
+// ██ AUTH — proxy /api/auth/me → Hub (pentru bara de nav)
+// ══════════════════════════════════════════════════════════════
+app.get('/api/auth/me', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Neautentificat' });
+    try {
+        const r    = await fetch(`${process.env.HUB_URL}/api/internal/verify-token`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.INTERNAL_API_KEY },
+            body:    JSON.stringify({ token }),
+            signal:  AbortSignal.timeout(8000)
+        });
+        const data = await r.json();
+        if (!r.ok) return res.status(401).json({ error: 'Sesiune expirată' });
+        res.json({ user: data.user });
+    } catch (e) {
+        res.status(503).json({ error: 'Hub indisponibil' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+// ██ CREDITS INFO — returnează creditele curente ale userului
+// ══════════════════════════════════════════════════════════════
+app.get('/api/credits-info', authenticate, async (req, res) => {
+    try {
+        const data = await hubAPI.checkCredits(req.userId);
+        res.json({ credits: data.credits });
+    } catch (e) {
+        res.status(500).json({ error: 'Eroare la citirea creditelor' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
 // ██ OAUTH — YOUTUBE
 // ══════════════════════════════════════════════════════════════
 app.get('/api/auth/youtube', authenticate, (req, res) => {
