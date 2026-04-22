@@ -508,6 +508,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('schedule-date').value = today;
 
     renderPlatformList();
+	// Restaurează tab-ul salvat
+const savedTab = localStorage.getItem('viralio_tab');
+if (savedTab && ['new','scheduled','history','accounts'].includes(savedTab)) {
+    switchTab(savedTab);
+}
     checkURLParams();
     const tok = getToken();
     if (tok) {
@@ -567,6 +572,7 @@ async function loadUserData() {
 
 // ── Tab switching ─────────────────────────────────────────────
 function switchTab(tab) {
+    localStorage.setItem('viralio_tab', tab);  // ← adaugă asta
     document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
     document.getElementById(`view-${tab}`).classList.remove('hidden');
 

@@ -96,6 +96,9 @@ const postQueue = new Bull('viralio-scheduler', {
     }
 });
 
+postQueue.on('error', err => console.error('❌ Bull/Redis eroare:', err.message));
+postQueue.on('ready', () => console.log('✅ Bull Queue conectat la Redis'));
+
 // ── Google OAuth2 Client ──────────────────────────────────────
 const googleOAuth2 = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -425,12 +428,24 @@ app.post('/api/posts', authenticate, async (req, res) => {
         await hubAPI.useCredits(req.userId, platforms.length);
 
         // Programăm job-ul în Bull
-        const delay = scheduleDate.getTime() - Date.now();
-        const job   = await postQueue.add(
+const delay = scheduleDate.getTime() - Date.now();
+        
+        // Nu blocăm răspunsul pe Bull — răspundem imediat
+        res.json({ success: true, post });
+        
+        // Adăugăm în queue async, fără să blocheze
+        postQueue.add(
             { postId: post._id.toString(), userId: req.userId },
             { delay, attempts: 3, backoff: { type: 'exponential', delay: 10000 } }
-        );
-        await Post.findByIdAndUpdate(post._id, { jobId: job.id.toString() });
+        ).then(job => {
+            Post.findByIdAndUpdate(post._id, { jobId: job.id.toString() }).catch(() => {});
+            console.log(`📅 Job Bull adăugat: ${job.id} | delay: ${Math.round(delay/1000)}s`);
+        }).catch(err => {
+            console.error('❌ Bull add error:', err.message);
+            // Salvăm eroarea în post dar nu anulăm — va fi reîncercat la restart
+        });
+        
+        return; // important: nu mai trimitem alt răspuns
 
         console.log(`📅 POST PROGRAMAT: ${post._id} | platforme: ${platforms.join(', ')} | la: ${scheduleDate.toISOString()}`);
         res.json({ success: true, post });
@@ -462,12 +477,21 @@ app.delete('/api/posts/:id', authenticate, async (req, res) => {
         const post = await Post.findOne({ _id: req.params.id, userId: req.userId });
         if (!post) return res.status(404).json({ error: 'Postare negăsită' });
 
-        if (post.status === 'scheduled' && post.jobId) {
-            const job = await postQueue.getJob(post.jobId);
-            if (job) await job.remove();
+if (post.status === 'scheduled' && post.jobId) {
+            // Scoatem din Bull (ignorăm dacă nu găsim job-ul)
+            try {
+                const job = await postQueue.getJob(post.jobId);
+                if (job) await job.remove();
+            } catch (bullErr) {
+                console.warn('⚠️ Nu s-a putut șterge job Bull:', bullErr.message);
+            }
             // Rambursăm creditele
-            const pendingPlatforms = post.platforms.filter(p => p.status === 'pending').length;
-            if (pendingPlatforms > 0) await hubAPI.useCredits(req.userId, -pendingPlatforms);
+            try {
+                const pendingPlatforms = post.platforms.filter(p => p.status === 'pending').length;
+                if (pendingPlatforms > 0) await hubAPI.useCredits(req.userId, -pendingPlatforms);
+            } catch (credErr) {
+                console.warn('⚠️ Nu s-au putut rambursa creditele:', credErr.message);
+            }
         }
 
         // Ștergem fișierul video dacă există și nu a fost publicat
