@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Viralio Scheduler — Programează postări pe toate platformele</title>
     <meta name="description" content="Programează automat postări video pe YouTube, Facebook, Instagram și TikTok dintr-un singur loc.">
-    <meta name="theme-color" content="#09090b">
+    <meta name="theme-color" content="#ffffff">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,75 +28,91 @@
             }
         }
     </script>
+    <!-- Apply saved theme BEFORE render to avoid flash -->
+    <script>
+        (function() {
+            if (localStorage.getItem('viralio_theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode-html');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-zinc-950 text-white font-sans min-h-screen">
+<body class="font-sans min-h-screen">
 
 <!-- ══ LOGIN MODAL (redirect to Hub) ═════════════════════════ -->
-<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(9,9,11,0.75);backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;" class="flex">
-    <div style="background:#18181b;border:1px solid #27272a;border-radius:24px;padding:36px;text-align:center;max-width:400px;width:90%;">
+<div id="login-modal" style="display:none;position:fixed;inset:0;backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;" class="flex modal-login-bg">
+    <div class="modal-login-box" style="border-radius:24px;padding:36px;text-align:center;max-width:400px;width:90%;">
         <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-3xl mx-auto mb-4">
             <i class="fas fa-fingerprint"></i>
         </div>
-        <h2 class="text-2xl font-extrabold mb-2 text-white">Intră în cont</h2>
-        <p class="text-zinc-400 text-sm mb-6">Trebuie să fii logat pe Viralio pentru a folosi Scheduler-ul.</p>
+        <h2 class="text-2xl font-extrabold mb-2">Intră în cont</h2>
+        <p class="text-sm mb-6" style="color:#a1a1aa">Trebuie să fii logat pe Viralio pentru a folosi Scheduler-ul.</p>
         <a href="https://hub.viralio.ro/login?redirect=https://scheduler.viralio.ro"
            class="block w-full py-3 rounded-xl font-bold text-white text-sm"
            style="background:linear-gradient(135deg,#4f46e5,#6366f1);">
             <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Loghează-te pe Viralio
         </a>
-        <p class="text-zinc-600 text-xs mt-4">Contul tău de pe hub.viralio.ro funcționează pe toate aplicațiile.</p>
+        <p class="text-xs mt-4" style="color:#52525b">Contul tău de pe hub.viralio.ro funcționează pe toate aplicațiile.</p>
     </div>
 </div>
 
 <!-- ══ HEADER — bara Viralio standard ══════════════════════════ -->
 <div class="sticky top-0 z-50 flex w-full justify-center px-2 py-4 md:p-2 max-w-screen-2xl mx-auto">
-    <nav class="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 backdrop-blur-xl md:mx-12 shadow-sm px-5 md:px-8 py-3 flex justify-between items-center">
+    <nav class="nav-bar w-full rounded-2xl border shadow-sm px-5 md:px-8 py-3 flex justify-between items-center md:mx-12">
         <!-- Logo -->
-        <a class="flex items-center font-black text-xl tracking-tight text-white" href="https://viralio.ro">
+        <a class="flex items-center font-black text-xl tracking-tight" href="https://viralio.ro">
             <div class="w-9 h-9 rounded-xl bg-gradient-viralio flex items-center justify-center text-white mr-2.5 shadow-md">
                 <i class="fa-solid fa-bolt"></i>
             </div>
-            Viralio <span class="text-sm font-medium text-zinc-500 ml-2 border-l border-zinc-700 pl-2 mt-1">Scheduler</span>
+            Viralio <span class="text-sm font-medium ml-2 border-l pl-2 mt-1 nav-subtitle">Scheduler</span>
         </a>
 
         <!-- Desktop nav tabs -->
-        <nav class="hidden sm:flex items-center gap-1 bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+        <nav class="hidden sm:flex items-center gap-1 nav-tabs rounded-xl p-1 border">
             <button onclick="switchTab('new')" id="tab-new" class="tab-btn active-tab px-4 py-2 rounded-lg text-sm font-medium transition-all">
                 <i class="fa-solid fa-plus mr-1.5"></i>Postare nouă
             </button>
-            <button onclick="switchTab('scheduled')" id="tab-scheduled" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+            <button onclick="switchTab('scheduled')" id="tab-scheduled" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all tab-inactive">
                 <i class="fa-solid fa-clock mr-1.5"></i>Programate
             </button>
-            <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+            <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all tab-inactive">
                 <i class="fa-solid fa-list-check mr-1.5"></i>Istoric
             </button>
-            <button onclick="switchTab('accounts')" id="tab-accounts" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white">
+            <button onclick="switchTab('accounts')" id="tab-accounts" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all tab-inactive">
                 <i class="fa-solid fa-link mr-1.5"></i>Conturi
             </button>
         </nav>
 
         <!-- User zone -->
-        <div class="flex items-center justify-end gap-3">
+        <div class="flex items-center justify-end gap-2">
             <!-- Credits badge -->
-            <div id="credits-badge" class="hidden items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm">
-                <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
-                <span id="credits-count" class="text-white font-medium">—</span>
-                <span class="text-zinc-500 text-xs">credite</span>
+            <div id="credits-badge" class="hidden items-center gap-1.5 credits-badge rounded-lg px-3 py-1.5 text-sm border">
+                <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                <span id="credits-count" class="font-medium">—</span>
+                <span class="text-xs muted-text">credite</span>
             </div>
+
+            <!-- Theme toggle -->
+            <button id="theme-toggle" onclick="toggleTheme()"
+                class="p-2 rounded-xl border theme-toggle-btn transition-all"
+                title="Schimbă tema">
+                <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+            </button>
+
             <!-- Not logged in -->
             <button onclick="document.getElementById('login-modal').style.display='flex'" id="login-top-btn"
-                class="px-5 py-2.5 bg-white text-slate-900 rounded-xl hover:bg-indigo-500 hover:text-white transition-all font-semibold shadow-md text-sm">
+                class="px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-indigo-500 transition-all font-semibold shadow-md text-sm">
                 Conectează-te
             </button>
             <!-- Logged in -->
-            <div id="user-profile" class="hidden items-center bg-zinc-900 border border-zinc-800 py-1 pl-1.5 pr-1.5 rounded-full">
-                <img id="nav-avatar" src="" class="w-8 h-8 rounded-full border border-zinc-700">
+            <div id="user-profile" class="hidden items-center user-profile-bg border py-1 pl-1.5 pr-1.5 rounded-full">
+                <img id="nav-avatar" src="" class="w-8 h-8 rounded-full border border-zinc-300">
                 <div class="flex flex-col leading-none ml-2 mr-2">
-                    <span id="nav-name" class="text-xs font-bold text-white mb-0.5"></span>
-                    <span class="text-[0.65rem] font-bold text-indigo-400"><span id="nav-credits-hub">0</span> Credite</span>
+                    <span id="nav-name" class="text-xs font-bold mb-0.5"></span>
+                    <span class="text-[0.65rem] font-bold text-indigo-500"><span id="nav-credits-hub">0</span> Credite</span>
                 </div>
-                <button onclick="logout()" class="p-2 text-zinc-500 hover:text-red-400 transition-colors rounded-full hover:bg-zinc-800">
+                <button onclick="logout()" class="p-2 muted-text hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark-hover-red">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
             </div>
@@ -105,11 +121,11 @@
 </div>
 
 <!-- Mobile nav tabs -->
-<div class="sm:hidden flex border-t border-zinc-800 bg-zinc-950 sticky top-[72px] z-40">
-    <button onclick="switchTab('new')"       id="mob-tab-new"       class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-indigo-400 border-b-2 border-indigo-500"><i class="fa-solid fa-plus text-base"></i>Nou</button>
-    <button onclick="switchTab('scheduled')" id="mob-tab-scheduled" class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-clock text-base"></i>Programate</button>
-    <button onclick="switchTab('history')"   id="mob-tab-history"   class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-list-check text-base"></i>Istoric</button>
-    <button onclick="switchTab('accounts')"  id="mob-tab-accounts"  class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-zinc-500 border-b-2 border-transparent"><i class="fa-solid fa-link text-base"></i>Conturi</button>
+<div class="sm:hidden flex border-t mobile-nav sticky top-[72px] z-40">
+    <button onclick="switchTab('new')"       id="mob-tab-new"       class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 text-indigo-500 border-b-2 border-indigo-500"><i class="fa-solid fa-plus text-base"></i>Nou</button>
+    <button onclick="switchTab('scheduled')" id="mob-tab-scheduled" class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 mob-tab-inactive border-b-2 border-transparent"><i class="fa-solid fa-clock text-base"></i>Programate</button>
+    <button onclick="switchTab('history')"   id="mob-tab-history"   class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 mob-tab-inactive border-b-2 border-transparent"><i class="fa-solid fa-list-check text-base"></i>Istoric</button>
+    <button onclick="switchTab('accounts')"  id="mob-tab-accounts"  class="mob-tab flex-1 py-3 text-xs flex flex-col items-center gap-1 mob-tab-inactive border-b-2 border-transparent"><i class="fa-solid fa-link text-base"></i>Conturi</button>
 </div>
 
 <!-- ══ TOAST ════════════════════════════════════════════════ -->
@@ -127,42 +143,42 @@
 
                 <!-- Upload Video -->
                 <div class="card">
-                    <h2 class="section-title"><i class="fa-solid fa-video mr-2 text-indigo-400"></i>Video</h2>
+                    <h2 class="section-title"><i class="fa-solid fa-video mr-2 text-indigo-500"></i>Video</h2>
 
                     <!-- Drop zone -->
                     <div id="drop-zone" class="drop-zone" onclick="document.getElementById('video-input').click()">
                         <div id="drop-empty">
                             <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400"></i>
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-500"></i>
                             </div>
-                            <p class="font-semibold text-white mb-1">Trage video-ul aici</p>
-                            <p class="text-zinc-500 text-sm">sau click pentru a selecta</p>
-                            <p class="text-zinc-600 text-xs mt-3">MP4, MOV, AVI, WebM · max 500MB</p>
+                            <p class="font-semibold mb-1">Trage video-ul aici</p>
+                            <p class="muted-text text-sm">sau click pentru a selecta</p>
+                            <p class="text-xs mt-3" style="color:#a1a1aa">MP4, MOV, AVI, WebM · max 500MB</p>
                         </div>
                         <div id="drop-preview" class="hidden">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-film text-xl text-indigo-400"></i>
+                                    <i class="fa-solid fa-film text-xl text-indigo-500"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p id="file-name" class="font-medium text-white truncate text-sm"></p>
-                                    <p id="file-size" class="text-zinc-500 text-xs mt-0.5"></p>
+                                    <p id="file-name" class="font-medium truncate text-sm"></p>
+                                    <p id="file-size" class="muted-text text-xs mt-0.5"></p>
                                 </div>
-                                <button onclick="clearVideo(event)" class="ml-auto p-2 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-red-400 transition-colors shrink-0">
+                                <button onclick="clearVideo(event)" class="ml-auto p-2 rounded-lg hover:bg-red-50 muted-text hover:text-red-500 transition-colors shrink-0">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
                             <!-- Upload progress -->
                             <div id="upload-progress" class="hidden mt-3">
-                                <div class="flex justify-between text-xs text-zinc-500 mb-1">
+                                <div class="flex justify-between text-xs muted-text mb-1">
                                     <span>Se încarcă...</span>
                                     <span id="progress-pct">0%</span>
                                 </div>
-                                <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-1.5 bg-zinc-200 rounded-full overflow-hidden">
                                     <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full transition-all duration-300" style="width:0%"></div>
                                 </div>
                             </div>
-                            <div id="upload-done" class="hidden mt-3 flex items-center gap-2 text-xs text-emerald-400">
+                            <div id="upload-done" class="hidden mt-3 flex items-center gap-2 text-xs text-emerald-600">
                                 <i class="fa-solid fa-circle-check"></i> Video încărcat cu succes
                             </div>
                         </div>
@@ -172,20 +188,20 @@
 
                 <!-- Post Details -->
                 <div class="card">
-                    <h2 class="section-title"><i class="fa-solid fa-pen-line mr-2 text-indigo-400"></i>Detalii postare</h2>
+                    <h2 class="section-title"><i class="fa-solid fa-pen-line mr-2 text-indigo-500"></i>Detalii postare</h2>
 
                     <div class="flex flex-col gap-4">
                         <div>
                             <label class="field-label">Titlu</label>
                             <input type="text" id="post-title" placeholder="Titlul video-ului tău..." maxlength="150"
                                    class="field-input" oninput="updatePreview()">
-                            <p class="text-zinc-600 text-xs mt-1 text-right"><span id="title-count">0</span>/150</p>
+                            <p class="muted-text text-xs mt-1 text-right"><span id="title-count">0</span>/150</p>
                         </div>
 
                         <div>
                             <label class="field-label">Descriere</label>
                             <textarea id="post-desc" rows="4" placeholder="Descrie conținutul video-ului..."
-                                      class="field-input resize-none" oninput="updatePreview()"></textarea>
+                                      class="field-input resize-none"></textarea>
                         </div>
 
                         <div>
@@ -193,10 +209,10 @@
                             <div id="hashtag-container" class="hashtag-container" onclick="document.getElementById('hashtag-input').focus()">
                                 <span id="hashtags-display" class="flex flex-wrap gap-1.5"></span>
                                 <input type="text" id="hashtag-input" placeholder="#adaugă hashtag..."
-                                       class="bg-transparent outline-none text-sm text-white placeholder-zinc-600 flex-1 min-w-[120px]"
+                                       class="bg-transparent outline-none text-sm placeholder-zinc-400 flex-1 min-w-[120px]"
                                        onkeydown="handleHashtagKey(event)" oninput="this.style.width = (this.value.length + 3) + 'ch'">
                             </div>
-                            <p class="text-zinc-600 text-xs mt-1">Apasă Enter sau Space pentru a adăuga</p>
+                            <p class="muted-text text-xs mt-1">Apasă Enter sau Space pentru a adăuga</p>
                         </div>
                     </div>
                 </div>
@@ -207,8 +223,8 @@
 
                 <!-- Platform selector -->
                 <div class="card">
-                    <h2 class="section-title"><i class="fa-solid fa-share-nodes mr-2 text-indigo-400"></i>Platforme</h2>
-                    <p class="text-zinc-500 text-xs mb-4">1 credit per platformă selectată</p>
+                    <h2 class="section-title"><i class="fa-solid fa-share-nodes mr-2 text-indigo-500"></i>Platforme</h2>
+                    <p class="muted-text text-xs mb-4">1 credit per platformă selectată</p>
 
                     <div id="platform-list" class="flex flex-col gap-3">
                         <!-- Injected by JS -->
@@ -217,7 +233,7 @@
 
                 <!-- Schedule -->
                 <div class="card">
-                    <h2 class="section-title"><i class="fa-solid fa-calendar-days mr-2 text-indigo-400"></i>Data publicării</h2>
+                    <h2 class="section-title"><i class="fa-solid fa-calendar-days mr-2 text-indigo-500"></i>Data publicării</h2>
 
                     <div class="flex flex-col gap-3">
                         <div>
@@ -243,16 +259,16 @@
                 </div>
 
                 <!-- Cost summary -->
-                <div id="cost-summary" class="hidden card bg-zinc-900/50 border-indigo-500/20">
+                <div id="cost-summary" class="hidden card cost-card border-indigo-500/20">
                     <div class="flex items-center justify-between text-sm">
-                        <span class="text-zinc-400">Cost total</span>
+                        <span class="muted-text">Cost total</span>
                         <div class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
-                            <span id="cost-value" class="font-bold text-white">0</span>
-                            <span class="text-zinc-500 text-xs">credite</span>
+                            <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                            <span id="cost-value" class="font-bold">0</span>
+                            <span class="muted-text text-xs">credite</span>
                         </div>
                     </div>
-                    <div class="mt-2 flex items-center justify-between text-xs text-zinc-500">
+                    <div class="mt-2 flex items-center justify-between text-xs muted-text">
                         <span>Credite disponibile</span>
                         <span id="available-credits">—</span>
                     </div>
@@ -271,8 +287,8 @@
     <div id="view-scheduled" class="view-panel hidden">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-bold text-white">Postări programate</h1>
-                <p class="text-zinc-500 text-sm mt-1">Postări în așteptare</p>
+                <h1 class="text-xl font-bold">Postări programate</h1>
+                <p class="muted-text text-sm mt-1">Postări în așteptare</p>
             </div>
             <button onclick="switchTab('new')" class="btn-primary text-sm">
                 <i class="fa-solid fa-plus mr-2"></i>Postare nouă
@@ -280,22 +296,22 @@
         </div>
         <div id="scheduled-list" class="flex flex-col gap-4">
             <div class="loading-placeholder">
-                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i>
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl" style="color:#a1a1aa"></i>
             </div>
         </div>
     </div>
 
-    <!-- ─── TAB: Istoric ──────────────────────────────────── -->
+    <!-- ─── TAB: Istoric ─────────────────────────────────── -->
     <div id="view-history" class="view-panel hidden">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-bold text-white">Istoricul postărilor</h1>
-                <p class="text-zinc-500 text-sm mt-1">Postări publicate și eșuate</p>
+                <h1 class="text-xl font-bold">Istoric postări</h1>
+                <p class="muted-text text-sm mt-1">Postări publicate sau eșuate</p>
             </div>
         </div>
         <div id="history-list" class="flex flex-col gap-4">
             <div class="loading-placeholder">
-                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i>
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl" style="color:#a1a1aa"></i>
             </div>
         </div>
     </div>
@@ -303,8 +319,8 @@
     <!-- ─── TAB: Conturi ──────────────────────────────────── -->
     <div id="view-accounts" class="view-panel hidden">
         <div class="mb-6">
-            <h1 class="text-xl font-bold text-white">Conturi conectate</h1>
-            <p class="text-zinc-500 text-sm mt-1">Conectează platformele pe care vrei să postezi</p>
+            <h1 class="text-xl font-bold">Conturi conectate</h1>
+            <p class="muted-text text-sm mt-1">Conectează platformele pe care vrei să postezi</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -316,10 +332,10 @@
                         <i class="fab fa-youtube text-xl text-red-500"></i>
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-white">YouTube</p>
-                        <p id="yt-info" class="text-zinc-500 text-xs mt-0.5">Neconectat</p>
+                        <p class="font-semibold">YouTube</p>
+                        <p id="yt-info" class="muted-text text-xs mt-0.5">Neconectat</p>
                     </div>
-                    <div id="yt-status" class="status-dot bg-zinc-700"></div>
+                    <div id="yt-status" class="status-dot bg-zinc-300"></div>
                 </div>
                 <div class="flex gap-2">
                     <button id="yt-connect-btn"    onclick="connectPlatform('youtube')"    class="btn-connect flex-1">
@@ -329,7 +345,7 @@
                         <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
                     </button>
                 </div>
-                <p class="text-zinc-600 text-xs mt-3">Postează direct pe canalul tău YouTube</p>
+                <p class="muted-text text-xs mt-3">Postează direct pe canalul tău YouTube</p>
             </div>
 
             <!-- Facebook -->
@@ -339,10 +355,10 @@
                         <i class="fab fa-facebook text-xl text-blue-500"></i>
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-white">Facebook</p>
-                        <p id="fb-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită pagină Business</p>
+                        <p class="font-semibold">Facebook</p>
+                        <p id="fb-info" class="muted-text text-xs mt-0.5">Neconectat · necesită pagină Business</p>
                     </div>
-                    <div id="fb-status" class="status-dot bg-zinc-700"></div>
+                    <div id="fb-status" class="status-dot bg-zinc-300"></div>
                 </div>
                 <div class="flex gap-2">
                     <button id="fb-connect-btn"    onclick="connectPlatform('facebook')"    class="btn-connect flex-1">
@@ -352,7 +368,7 @@
                         <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
                     </button>
                 </div>
-                <p class="text-zinc-600 text-xs mt-3">Postează pe pagina ta de Facebook</p>
+                <p class="muted-text text-xs mt-3">Postează pe pagina ta de Facebook</p>
             </div>
 
             <!-- Instagram -->
@@ -362,10 +378,10 @@
                         <i class="fab fa-instagram text-xl" style="color:#e1306c"></i>
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-white">Instagram</p>
-                        <p id="ig-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită cont Business</p>
+                        <p class="font-semibold">Instagram</p>
+                        <p id="ig-info" class="muted-text text-xs mt-0.5">Neconectat · necesită cont Business</p>
                     </div>
-                    <div id="ig-status" class="status-dot bg-zinc-700"></div>
+                    <div id="ig-status" class="status-dot bg-zinc-300"></div>
                 </div>
                 <div class="flex gap-2">
                     <button id="ig-connect-btn"    onclick="connectPlatform('facebook')"    class="btn-connect flex-1">
@@ -375,20 +391,20 @@
                         <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
                     </button>
                 </div>
-                <p class="text-zinc-600 text-xs mt-3">Se conectează automat cu Facebook dacă ai contul Business legat</p>
+                <p class="muted-text text-xs mt-3">Se conectează automat cu Facebook dacă ai contul Business legat</p>
             </div>
 
             <!-- TikTok -->
             <div class="platform-card" id="card-tiktok">
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="platform-icon bg-zinc-800">
-                        <i class="fab fa-tiktok text-xl text-white"></i>
+                    <div class="platform-icon platform-icon-tiktok">
+                        <i class="fab fa-tiktok text-xl"></i>
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-white">TikTok</p>
-                        <p id="tt-info" class="text-zinc-500 text-xs mt-0.5">Neconectat · necesită aprobare TikTok</p>
+                        <p class="font-semibold">TikTok</p>
+                        <p id="tt-info" class="muted-text text-xs mt-0.5">Neconectat · necesită aprobare TikTok</p>
                     </div>
-                    <div id="tt-status" class="status-dot bg-zinc-700"></div>
+                    <div id="tt-status" class="status-dot bg-zinc-300"></div>
                 </div>
                 <div class="flex gap-2">
                     <button id="tt-connect-btn"    onclick="connectPlatform('tiktok')"    class="btn-connect flex-1">
@@ -398,21 +414,21 @@
                         <i class="fa-solid fa-link-slash mr-1.5"></i>Deconectează
                     </button>
                 </div>
-                <p class="text-zinc-600 text-xs mt-3">Postează Reels pe contul tău TikTok</p>
+                <p class="muted-text text-xs mt-3">Postează Reels pe contul tău TikTok</p>
             </div>
         </div>
 
         <!-- Note -->
         <div class="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
             <div class="flex gap-3">
-                <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5 shrink-0"></i>
-                <div class="text-sm text-zinc-400">
-                    <p class="font-medium text-amber-400 mb-1">Cerințe platforme</p>
-                    <ul class="space-y-1 text-zinc-500 text-xs">
-                        <li>• <strong class="text-zinc-400">YouTube:</strong> Cont Google cu canal YouTube activ</li>
-                        <li>• <strong class="text-zinc-400">Facebook:</strong> Pagină Business (nu profil personal)</li>
-                        <li>• <strong class="text-zinc-400">Instagram:</strong> Cont Professional/Business legat de Pagina FB</li>
-                        <li>• <strong class="text-zinc-400">TikTok:</strong> Aplicație TikTok Developer cu Content Posting API aprobat</li>
+                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 shrink-0"></i>
+                <div class="text-sm">
+                    <p class="font-medium text-amber-600 mb-1">Cerințe platforme</p>
+                    <ul class="space-y-1 muted-text text-xs">
+                        <li>• <strong>YouTube:</strong> Cont Google cu canal YouTube activ</li>
+                        <li>• <strong>Facebook:</strong> Pagină Business (nu profil personal)</li>
+                        <li>• <strong>Instagram:</strong> Cont Professional/Business legat de Pagina FB</li>
+                        <li>• <strong>TikTok:</strong> Aplicație TikTok Developer cu Content Posting API aprobat</li>
                     </ul>
                 </div>
             </div>
@@ -425,12 +441,12 @@
 <div id="confirm-modal" class="modal-backdrop hidden">
     <div class="modal-box">
         <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
-            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
         </div>
-        <h3 class="text-lg font-bold text-white text-center mb-2" id="confirm-title">Ești sigur?</h3>
-        <p class="text-zinc-400 text-sm text-center mb-6" id="confirm-msg"></p>
+        <h3 class="text-lg font-bold text-center mb-2" id="confirm-title">Ești sigur?</h3>
+        <p class="muted-text text-sm text-center mb-6" id="confirm-msg"></p>
         <div class="flex gap-3">
-            <button onclick="closeConfirm()" class="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors">Anulează</button>
+            <button onclick="closeConfirm()" class="flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors confirm-cancel-btn">Anulează</button>
             <button id="confirm-ok" class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors">Șterge</button>
         </div>
     </div>
@@ -441,7 +457,27 @@
 // VIRALIO SCHEDULER — Client-side JS
 // ══════════════════════════════════════════════════════════════
 
-// ══ AUTH — cookie viralio_token (același ca pe tot ecosistemul Viralio) ══
+// ══ THEME ═════════════════════════════════════════════════════
+function applyTheme(dark) {
+    document.body.classList.toggle('dark-mode', dark);
+    document.documentElement.classList.toggle('dark-mode-html', dark);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.className = dark ? 'fa-solid fa-sun text-sm' : 'fa-solid fa-moon text-sm';
+}
+
+function toggleTheme() {
+    const isDark = !document.body.classList.contains('dark-mode');
+    applyTheme(isDark);
+    localStorage.setItem('viralio_theme', isDark ? 'dark' : 'light');
+}
+
+// Apply on load
+(function() {
+    const saved = localStorage.getItem('viralio_theme');
+    applyTheme(saved === 'dark');
+})();
+
+// ══ AUTH ══════════════════════════════════════════════════════
 function getToken() {
     const match = document.cookie.match(/(?:^|; )viralio_token=([^;]*)/);
     return match ? decodeURIComponent(match[1]) : null;
@@ -451,15 +487,18 @@ function removeToken() {
 }
 function logout() { removeToken(); location.reload(); }
 
-function updateNavUI(user) {
+function updateNavUI(user, credits) {
     document.getElementById('login-top-btn')?.classList.add('hidden');
     const prof = document.getElementById('user-profile');
     if (prof) { prof.classList.remove('hidden'); prof.classList.add('flex'); }
-    if (user.name)    document.getElementById('nav-name').innerText   = user.name.split(' ')[0];
-    if (user.picture) document.getElementById('nav-avatar').src       = user.picture;
-    if (user.credits !== undefined) {
-        document.getElementById('nav-credits-hub').innerText = user.credits;
-        document.getElementById('credits-count').innerText   = user.credits;
+    if (user.name)    document.getElementById('nav-name').innerText = user.name.split(' ')[0];
+    if (user.picture) document.getElementById('nav-avatar').src     = user.picture;
+
+    // Credits: use passed credits value if available, fallback to user.credits
+    const creditVal = (credits !== undefined && credits !== null) ? credits : user.credits;
+    if (creditVal !== undefined && creditVal !== null) {
+        document.getElementById('nav-credits-hub').innerText = creditVal;
+        document.getElementById('credits-count').innerText   = creditVal;
         const badge = document.getElementById('credits-badge');
         badge.classList.remove('hidden'); badge.classList.add('flex');
     }
@@ -487,7 +526,7 @@ let state = {
     videoName:   null,
     videoSize:   null,
     hashtags:    [],
-    platforms:   [],           // selected
+    platforms:   [],
     connectedAccounts: {},
     credits:     null
 };
@@ -497,22 +536,21 @@ const PLATFORMS = [
     { id: 'youtube',   label: 'YouTube',   icon: 'fab fa-youtube',   color: 'text-red-500',   bg: 'bg-red-500/10' },
     { id: 'facebook',  label: 'Facebook',  icon: 'fab fa-facebook',  color: 'text-blue-500',  bg: 'bg-blue-500/10' },
     { id: 'instagram', label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-500',  bg: 'bg-pink-500/10' },
-    { id: 'tiktok',    label: 'TikTok',    icon: 'fab fa-tiktok',    color: 'text-white',     bg: 'bg-zinc-800' },
+    { id: 'tiktok',    label: 'TikTok',    icon: 'fab fa-tiktok',    color: 'tiktok-icon',    bg: 'platform-icon-tiktok-sm' },
 ];
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Set min date to today
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('schedule-date').min = today;
+    document.getElementById('schedule-date').min   = today;
     document.getElementById('schedule-date').value = today;
 
     renderPlatformList();
-	// Restaurează tab-ul salvat
-const savedTab = localStorage.getItem('viralio_tab');
-if (savedTab && ['new','scheduled','history','accounts'].includes(savedTab)) {
-    switchTab(savedTab);
-}
+
+    const savedTab = localStorage.getItem('viralio_tab');
+    if (savedTab && ['new','scheduled','history','accounts'].includes(savedTab)) {
+        switchTab(savedTab);
+    }
     checkURLParams();
     const tok = getToken();
     if (tok) {
@@ -522,74 +560,70 @@ if (savedTab && ['new','scheduled','history','accounts'].includes(savedTab)) {
     }
 });
 
+// ── Load user data — ALL requests in parallel ─────────────────
 async function loadUserData() {
-    try {
-        // 1. Verificăm tokenul pe Hub și obținem datele userului pentru bara de nav
-        const tok = getToken();
-        if (tok) {
-            try {
-                const meRes = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': `Bearer ${tok}` }
-                });
-                if (meRes.ok) {
-                    const meData = await meRes.json();
-                    if (meData.user) updateNavUI(meData.user);
-                } else if (meRes.status === 401) {
-                    removeToken();
-                    document.getElementById('login-modal').style.display = 'flex';
-                    return;
-                }
-            } catch (e) { /* Hub temporar indisponibil, continuăm */ }
-        }
+    const tok = getToken();
+    if (!tok) {
+        document.getElementById('login-modal').style.display = 'flex';
+        return;
+    }
 
-        // 2. Date locale (conturi platforme + credite)
-        const [creditsData, accountsData] = await Promise.all([
+    try {
+        const [meResult, creditsData, accountsData] = await Promise.all([
+            fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${tok}` } })
+                .then(r => {
+                    if (r.status === 401) { removeToken(); return null; }
+                    return r.ok ? r.json() : null;
+                })
+                .catch(() => null),
             apiFetch('/api/credits-info').catch(() => null),
-            apiFetch('/api/accounts')
+            apiFetch('/api/accounts').catch(() => null)
         ]);
 
-        if (creditsData) {
-            state.credits = creditsData.credits;
-            document.getElementById('credits-count').textContent    = creditsData.credits;
-            document.getElementById('nav-credits-hub').textContent  = creditsData.credits;
-            const badge = document.getElementById('credits-badge');
-            badge.classList.remove('hidden'); badge.classList.add('flex');
+        if (!meResult) {
+            document.getElementById('login-modal').style.display = 'flex';
+            return;
         }
 
-        state.connectedAccounts = {};
-        accountsData.accounts.forEach(a => state.connectedAccounts[a.platform] = a);
+        const credits = creditsData?.credits ?? meResult?.user?.credits ?? null;
+        state.credits = credits;
+
+        if (meResult.user) updateNavUI(meResult.user, credits);
+
+        if (accountsData?.accounts) {
+            state.connectedAccounts = {};
+            accountsData.accounts.forEach(a => state.connectedAccounts[a.platform] = a);
+        }
 
         renderPlatformList();
         updateAccountsTab();
     } catch (err) {
         console.warn('loadUserData error:', err.message);
-        if (err.message.includes('401')) {
-            removeToken();
-            document.getElementById('login-modal').style.display = 'flex';
-        }
     }
 }
 
 // ── Tab switching ─────────────────────────────────────────────
 function switchTab(tab) {
-    localStorage.setItem('viralio_tab', tab);  // ← adaugă asta
+    localStorage.setItem('viralio_tab', tab);
     document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
     document.getElementById(`view-${tab}`).classList.remove('hidden');
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active-tab');
-        btn.classList.add('text-zinc-400');
+        btn.classList.add('tab-inactive');
     });
     const activeBtn = document.getElementById(`tab-${tab}`);
-    if (activeBtn) { activeBtn.classList.add('active-tab'); activeBtn.classList.remove('text-zinc-400'); }
+    if (activeBtn) { activeBtn.classList.add('active-tab'); activeBtn.classList.remove('tab-inactive'); }
 
-    // Mobile tabs
     document.querySelectorAll('.mob-tab').forEach(btn => {
-        btn.classList.remove('text-indigo-400', 'border-indigo-500');
-        btn.classList.add('text-zinc-500', 'border-transparent');
+        btn.classList.remove('text-indigo-500', 'border-indigo-500');
+        btn.classList.add('mob-tab-inactive', 'border-transparent');
     });
     const mobActive = document.getElementById(`mob-tab-${tab}`);
-    if (mobActive) { mobActive.classList.add('text-indigo-400', 'border-indigo-500'); mobActive.classList.remove('text-zinc-500', 'border-transparent'); }
+    if (mobActive) {
+        mobActive.classList.add('text-indigo-500', 'border-indigo-500');
+        mobActive.classList.remove('mob-tab-inactive', 'border-transparent');
+    }
 
     if (tab === 'scheduled' || tab === 'history') loadPosts(tab);
     if (tab === 'accounts') updateAccountsTab();
@@ -597,7 +631,7 @@ function switchTab(tab) {
 
 // ── URL params (OAuth callbacks) ─────────────────────────────
 function checkURLParams() {
-    const params = new URLSearchParams(window.location.search);
+    const params    = new URLSearchParams(window.location.search);
     const connected = params.get('connected');
     const error     = params.get('error');
 
@@ -630,13 +664,13 @@ function renderPlatformList() {
                 <i class="${p.icon} ${p.color} text-sm"></i>
             </div>
             <div class="flex-1">
-                <p class="text-sm font-medium text-white">${p.label}</p>
-                <p class="text-xs text-zinc-500">${connected ? name : 'Neconectat'}</p>
+                <p class="text-sm font-medium">${p.label}</p>
+                <p class="text-xs muted-text">${connected ? name : 'Neconectat'}</p>
             </div>
             <div class="flex items-center gap-2">
-                ${!connected ? '<span class="text-xs text-zinc-600 bg-zinc-800 rounded px-2 py-0.5">Conectează</span>' : ''}
+                ${!connected ? '<span class="text-xs muted-text platform-tag-disconnected rounded px-2 py-0.5">Conectează</span>' : ''}
                 <div class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
-                    ${selected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-700 bg-transparent'}">
+                    ${selected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 bg-transparent'}">
                     ${selected ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
                 </div>
             </div>
@@ -789,7 +823,7 @@ function updateCostSummary() {
 
     if (cost > 0) {
         el.classList.remove('hidden');
-        document.getElementById('cost-value').textContent      = cost;
+        document.getElementById('cost-value').textContent       = cost;
         document.getElementById('available-credits').textContent = state.credits !== null ? state.credits : '—';
     } else {
         el.classList.add('hidden');
@@ -817,16 +851,16 @@ async function submitPost() {
     const dateVal     = document.getElementById('schedule-date').value;
     const timeVal     = document.getElementById('schedule-time').value || '09:00';
 
-    if (!state.videoPath)      { showToast('Încarcă un video mai întâi', 'error'); return; }
+    if (!state.videoPath)        { showToast('Încarcă un video mai întâi', 'error'); return; }
     if (!state.platforms.length) { showToast('Selectează cel puțin o platformă', 'error'); return; }
-    if (!dateVal)              { showToast('Selectează data publicării', 'error'); return; }
+    if (!dateVal)                { showToast('Selectează data publicării', 'error'); return; }
 
     const scheduledAt = new Date(`${dateVal}T${timeVal}:00`);
     if (scheduledAt <= new Date()) { showToast('Data trebuie să fie în viitor', 'error'); return; }
 
     const btn = document.getElementById('submit-btn');
-    btn.disabled   = true;
-    btn.innerHTML  = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Se programează...';
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Se programează...';
 
     try {
         await apiFetch('/api/posts', {
@@ -847,7 +881,8 @@ async function submitPost() {
         resetForm();
         if (state.credits !== null) {
             state.credits -= state.platforms.length;
-            document.getElementById('credits-count').textContent = state.credits;
+            document.getElementById('credits-count').textContent   = state.credits;
+            document.getElementById('nav-credits-hub').textContent = state.credits;
         }
     } catch (err) {
         showToast(err.message, 'error');
@@ -872,7 +907,7 @@ function resetForm() {
 // ══ POSTS LIST ════════════════════════════════════════════════
 async function loadPosts(tab) {
     const listEl = document.getElementById(`${tab}-list`);
-    listEl.innerHTML = '<div class="loading-placeholder"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-zinc-600"></i></div>';
+    listEl.innerHTML = '<div class="loading-placeholder"><i class="fa-solid fa-circle-notch fa-spin text-2xl" style="color:#a1a1aa"></i></div>';
 
     try {
         const { posts } = await apiFetch('/api/posts');
@@ -884,7 +919,7 @@ async function loadPosts(tab) {
 
         if (!filtered.length) {
             listEl.innerHTML = `
-                <div class="text-center py-16 text-zinc-600">
+                <div class="text-center py-16 muted-text">
                     <i class="fa-solid fa-${tab === 'scheduled' ? 'clock' : 'check-circle'} text-4xl mb-4 block opacity-30"></i>
                     <p class="font-medium">${tab === 'scheduled' ? 'Nu ai postări programate' : 'Niciun post în istoric'}</p>
                     ${tab === 'scheduled' ? '<button onclick="switchTab(\'new\')" class="mt-4 btn-primary text-sm">Programează primul post</button>' : ''}
@@ -894,7 +929,7 @@ async function loadPosts(tab) {
 
         listEl.innerHTML = filtered.map(post => renderPostCard(post)).join('');
     } catch (err) {
-        listEl.innerHTML = `<div class="text-center py-8 text-red-400"><i class="fa-solid fa-exclamation-circle mr-2"></i>${err.message}</div>`;
+        listEl.innerHTML = `<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle mr-2"></i>${err.message}</div>`;
     }
 }
 
@@ -910,10 +945,10 @@ function renderPostCard(post) {
     const s = statusMap[post.status] || statusMap.scheduled;
 
     const platformIcons = {
-        youtube: '<i class="fab fa-youtube text-red-500"></i>',
-        facebook: '<i class="fab fa-facebook text-blue-500"></i>',
+        youtube:   '<i class="fab fa-youtube text-red-500"></i>',
+        facebook:  '<i class="fab fa-facebook text-blue-500"></i>',
         instagram: '<i class="fab fa-instagram text-pink-500"></i>',
-        tiktok: '<i class="fab fa-tiktok text-white"></i>'
+        tiktok:    '<i class="fab fa-tiktok"></i>'
     };
 
     const canDelete = ['scheduled', 'failed', 'cancelled', 'partial'].includes(post.status);
@@ -922,32 +957,31 @@ function renderPostCard(post) {
     <div class="post-card" id="post-${post._id}">
         <div class="flex items-start gap-4">
             <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <i class="fa-solid fa-film text-indigo-400"></i>
+                <i class="fa-solid fa-film text-indigo-500"></i>
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="font-semibold text-white text-sm truncate">${escHtml(post.title)}</h3>
+                    <h3 class="font-semibold text-sm truncate">${escHtml(post.title)}</h3>
                     <span class="badge ${s.cls}"><i class="fa-solid ${s.icon} mr-1"></i>${s.label}</span>
                 </div>
-                <div class="flex items-center gap-3 mt-1.5 text-xs text-zinc-500">
+                <div class="flex items-center gap-3 mt-1.5 text-xs muted-text">
                     <span><i class="fa-regular fa-calendar mr-1"></i>${formatDate(new Date(post.scheduledAt))}</span>
                     <span><i class="fa-solid fa-file-video mr-1"></i>${post.videoName || 'video.mp4'}</span>
                 </div>
-                <!-- Platform statuses -->
                 <div class="flex flex-wrap gap-2 mt-2.5">
                     ${post.platforms.map(p => `
-                        <div class="flex items-center gap-1 text-xs rounded-lg px-2 py-1 bg-zinc-800 border border-zinc-700">
+                        <div class="flex items-center gap-1 text-xs rounded-lg px-2 py-1 post-platform-chip border">
                             ${platformIcons[p.name] || p.name}
-                            <span class="text-zinc-400 ml-1">${p.name}</span>
-                            ${p.status === 'posted'  ? '<i class="fa-solid fa-check text-emerald-400 ml-1"></i>' : ''}
-                            ${p.status === 'failed'  ? '<i class="fa-solid fa-times text-red-400 ml-1" title="' + escHtml(p.error || '') + '"></i>' : ''}
-                            ${p.status === 'pending' ? '<i class="fa-solid fa-clock text-zinc-500 ml-1"></i>' : ''}
-                            ${p.status === 'posting' ? '<i class="fa-solid fa-circle-notch fa-spin text-indigo-400 ml-1"></i>' : ''}
+                            <span class="muted-text ml-1">${p.name}</span>
+                            ${p.status === 'posted'  ? '<i class="fa-solid fa-check text-emerald-500 ml-1"></i>' : ''}
+                            ${p.status === 'failed'  ? '<i class="fa-solid fa-times text-red-500 ml-1" title="' + escHtml(p.error || '') + '"></i>' : ''}
+                            ${p.status === 'pending' ? '<i class="fa-solid fa-clock muted-text ml-1"></i>' : ''}
+                            ${p.status === 'posting' ? '<i class="fa-solid fa-circle-notch fa-spin text-indigo-500 ml-1"></i>' : ''}
                         </div>`).join('')}
                 </div>
             </div>
             ${canDelete ? `
-            <button onclick="confirmDelete('${post._id}')" class="p-2 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-red-400 transition-colors shrink-0" title="Șterge postarea">
+            <button onclick="confirmDelete('${post._id}')" class="p-2 rounded-lg hover:bg-red-50 muted-text hover:text-red-500 transition-colors shrink-0" title="Șterge postarea">
                 <i class="fa-solid fa-trash text-sm"></i>
             </button>` : ''}
         </div>
@@ -957,6 +991,10 @@ function renderPostCard(post) {
 // ══ DELETE POST ═══════════════════════════════════════════════
 let pendingDeleteId = null;
 function confirmDelete(postId) {
+    if (!postId || postId === 'null' || postId === 'undefined') {
+        showToast('ID postare invalid', 'error');
+        return;
+    }
     pendingDeleteId = postId;
     document.getElementById('confirm-title').textContent = 'Șterge postarea?';
     document.getElementById('confirm-msg').textContent   = 'Dacă postarea e programată, va fi anulată și creditele vor fi rambursate.';
@@ -987,14 +1025,14 @@ function updateAccountsTab() {
     platforms.forEach(p => {
         const acc      = state.connectedAccounts[p];
         const prefix   = infoMap[p];
-        const infoEl   = document.getElementById(`${prefix}-info`);
-        const statusEl = document.getElementById(`${prefix}-status`);
+        const infoEl        = document.getElementById(`${prefix}-info`);
+        const statusEl      = document.getElementById(`${prefix}-status`);
         const connectBtn    = document.getElementById(`${prefix}-connect-btn`);
         const disconnectBtn = document.getElementById(`${prefix}-disconnect-btn`);
 
         if (acc) {
             infoEl.textContent = acc.channelName || 'Conectat';
-            statusEl.classList.remove('bg-zinc-700');
+            statusEl.classList.remove('bg-zinc-300');
             statusEl.classList.add('bg-emerald-500');
             connectBtn.classList.add('hidden');
             disconnectBtn.classList.remove('hidden');
@@ -1003,7 +1041,7 @@ function updateAccountsTab() {
                                   p === 'facebook'  ? 'Neconectat · necesită pagină Business' :
                                   p === 'tiktok'    ? 'Neconectat · necesită aprobare TikTok' : 'Neconectat';
             statusEl.classList.remove('bg-emerald-500');
-            statusEl.classList.add('bg-zinc-700');
+            statusEl.classList.add('bg-zinc-300');
             connectBtn.classList.remove('hidden');
             disconnectBtn.classList.add('hidden');
         }
@@ -1034,6 +1072,12 @@ async function disconnectPlatform(platform) {
 // ══ TOAST ═════════════════════════════════════════════════════
 function showToast(msg, type = 'info') {
     const colors = {
+        success: 'border-emerald-500/30 bg-emerald-50 text-emerald-700',
+        error:   'border-red-500/30 bg-red-50 text-red-700',
+        warning: 'border-amber-500/30 bg-amber-50 text-amber-700',
+        info:    'border-indigo-500/30 bg-indigo-50 text-indigo-700'
+    };
+    const colorsDark = {
         success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
         error:   'border-red-500/30 bg-red-500/10 text-red-300',
         warning: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
@@ -1041,8 +1085,11 @@ function showToast(msg, type = 'info') {
     };
     const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-triangle-exclamation', info: 'fa-info-circle' };
 
+    const isDark = document.body.classList.contains('dark-mode');
+    const colorClass = isDark ? colorsDark[type] : colors[type];
+
     const el = document.createElement('div');
-    el.className = `toast flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm max-w-xs pointer-events-auto ${colors[type]}`;
+    el.className = `toast flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm max-w-xs pointer-events-auto shadow-md ${colorClass}`;
     el.innerHTML = `<i class="fa-solid ${icons[type]} shrink-0"></i><span>${escHtml(msg)}</span>`;
     document.getElementById('toast').appendChild(el);
 
