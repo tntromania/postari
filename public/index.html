@@ -36,14 +36,19 @@
     <!-- Apply saved theme BEFORE render to avoid flash -->
     <script>
         (function() {
-            if (localStorage.getItem('viralio_theme') === 'dark') {
-                document.documentElement.classList.add('dark-mode-html');
+            // Default: dark. Add html.light only if user chose light
+            if (localStorage.getItem('viralio_theme') === 'light') {
+                document.documentElement.classList.add('light');
             }
         })();
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="font-sans min-h-screen">
+<!-- Ambient orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
 
 <!-- ══ LOGIN MODAL (redirect to Hub) ═════════════════════════ -->
 <div id="login-modal" style="display:none;position:fixed;inset:0;backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;" class="flex modal-login-bg">
@@ -89,18 +94,10 @@
 
         <!-- User zone -->
         <div class="flex items-center justify-end gap-2">
-            <!-- Credits badge -->
-            <div id="credits-badge" class="hidden items-center gap-1.5 credits-badge rounded-lg px-3 py-1.5 text-sm border">
-                <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
-                <span id="credits-count" class="font-medium">—</span>
-                <span class="text-xs muted-text">credite</span>
-            </div>
-
             <!-- Theme toggle -->
-            <button id="theme-toggle" onclick="toggleTheme()"
-                class="p-2 rounded-xl border theme-toggle-btn transition-all"
-                title="Schimbă tema">
-                <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+            <button id="theme-toggle" onclick="toggleTheme()" title="Schimbă tema">
+                <span class="icon-moon"><i class="fa-solid fa-moon text-sm"></i></span>
+                <span class="icon-sun"><i class="fa-solid fa-sun text-sm"></i></span>
             </button>
 
             <!-- Not logged in -->
@@ -271,10 +268,7 @@
                             <span class="muted-text text-xs">credite</span>
                         </div>
                     </div>
-                    <div class="mt-2 flex items-center justify-between text-xs muted-text">
-                        <span>Credite disponibile</span>
-                        <span id="available-credits">—</span>
-                    </div>
+
                 </div>
 
                 <!-- Submit -->
@@ -461,23 +455,24 @@
 // ══════════════════════════════════════════════════════════════
 
 // ══ THEME ═════════════════════════════════════════════════════
-function applyTheme(dark) {
-    document.body.classList.toggle('dark-mode', dark);
-    document.documentElement.classList.toggle('dark-mode-html', dark);
-    const icon = document.getElementById('theme-icon');
-    if (icon) icon.className = dark ? 'fa-solid fa-sun text-sm' : 'fa-solid fa-moon text-sm';
+function applyTheme(light) {
+    if (light) {
+        document.documentElement.classList.add('light');
+    } else {
+        document.documentElement.classList.remove('light');
+    }
 }
 
 function toggleTheme() {
-    const isDark = !document.body.classList.contains('dark-mode');
-    applyTheme(isDark);
-    localStorage.setItem('viralio_theme', isDark ? 'dark' : 'light');
+    const isLight = document.documentElement.classList.contains('light');
+    applyTheme(!isLight);
+    localStorage.setItem('viralio_theme', !isLight ? 'light' : 'dark');
 }
 
-// Apply on load
+// Apply on load — dark by default
 (function() {
     const saved = localStorage.getItem('viralio_theme');
-    applyTheme(saved === 'dark');
+    applyTheme(saved === 'light');
 })();
 
 // ══ AUTH ══════════════════════════════════════════════════════
@@ -497,13 +492,9 @@ function updateNavUI(user, credits) {
     if (user.name)    document.getElementById('nav-name').innerText = user.name.split(' ')[0];
     if (user.picture) document.getElementById('nav-avatar').src     = user.picture;
 
-    // Credits: use passed credits value if available, fallback to user.credits
     const creditVal = (credits !== undefined && credits !== null) ? credits : user.credits;
     if (creditVal !== undefined && creditVal !== null) {
         document.getElementById('nav-credits-hub').innerText = creditVal;
-        document.getElementById('credits-count').innerText   = creditVal;
-        const badge = document.getElementById('credits-badge');
-        badge.classList.remove('hidden'); badge.classList.add('flex');
     }
 }
 
@@ -826,8 +817,7 @@ function updateCostSummary() {
 
     if (cost > 0) {
         el.classList.remove('hidden');
-        document.getElementById('cost-value').textContent       = cost;
-        document.getElementById('available-credits').textContent = state.credits !== null ? state.credits : '—';
+        document.getElementById('cost-value').textContent = cost;
     } else {
         el.classList.add('hidden');
     }
@@ -884,7 +874,6 @@ async function submitPost() {
         resetForm();
         if (state.credits !== null) {
             state.credits -= state.platforms.length;
-            document.getElementById('credits-count').textContent   = state.credits;
             document.getElementById('nav-credits-hub').textContent = state.credits;
         }
     } catch (err) {
@@ -1088,8 +1077,8 @@ function showToast(msg, type = 'info') {
     };
     const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-triangle-exclamation', info: 'fa-info-circle' };
 
-    const isDark = document.body.classList.contains('dark-mode');
-    const colorClass = isDark ? colorsDark[type] : colors[type];
+    const isLight = document.documentElement.classList.contains('light');
+    const colorClass = isLight ? colors[type] : colorsDark[type];
 
     const el = document.createElement('div');
     el.className = `toast flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm max-w-xs pointer-events-auto shadow-md ${colorClass}`;
