@@ -681,21 +681,28 @@ async function postToTikTok(post, account) {
     const fileSize = post.videoSize || fs.statSync(post.videoPath).size;
 
     // 1. Init upload — folosește DRAFT endpoint
-    const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', {
-        method:  'POST',
-        headers: { 
-            'Authorization': `Bearer ${account.accessToken}`, 
-            'Content-Type': 'application/json; charset=UTF-8' 
+const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
+    method:  'POST',
+    headers: { 
+        'Authorization': `Bearer ${account.accessToken}`, 
+        'Content-Type': 'application/json; charset=UTF-8' 
+    },
+    body: JSON.stringify({
+        post_info: {
+            title:           post.title.replace(/[^\w\s\-.,!?()]/g, '').substring(0, 150) || 'Video',
+            privacy_level:   'SELF_ONLY',
+            disable_duet:    false,
+            disable_comment: false,
+            disable_stitch:  false
         },
-        body: JSON.stringify({
-            source_info: { 
-                source: 'FILE_UPLOAD', 
-                video_size: fileSize, 
-                chunk_size: fileSize, 
-                total_chunk_count: 1 
-            }
-        })
-    });
+        source_info: { 
+            source:            'FILE_UPLOAD', 
+            video_size:        fileSize, 
+            chunk_size:        fileSize, 
+            total_chunk_count: 1 
+        }
+    })
+});
     const initData = await initRes.json();
     if (initData.error?.code !== 'ok') throw new Error(`TikTok init: ${JSON.stringify(initData.error)}`);
 
