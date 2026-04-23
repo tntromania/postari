@@ -204,7 +204,7 @@ app.get('/api/auth/facebook', authenticate, (req, res) => {
     const params = new URLSearchParams({
         client_id:     process.env.META_APP_ID,
         redirect_uri:  `${process.env.APP_URL}/api/auth/facebook/callback`,
-        scope: 'pages_manage_posts,pages_read_engagement,instagram_basic,instagram_content_publishing,pages_show_list,business_management',
+        scope: 'pages_manage_posts,pages_read_engagement,instagram_basic,instagram_content_publish,pages_show_list,business_management',
         state:         req.userId,
         response_type: 'code'
     });
