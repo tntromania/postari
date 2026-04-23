@@ -50,19 +50,34 @@
 <div class="orb orb-2"></div>
 <div class="orb orb-3"></div>
 
-<!-- ══ LOGIN MODAL (redirect to Hub) ═════════════════════════ -->
+<!-- Google GSI script -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- ══ LOGIN MODAL ════════════════════════════════════════════ -->
 <div id="login-modal" style="display:none;position:fixed;inset:0;backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;" class="flex modal-login-bg">
     <div class="modal-login-box" style="border-radius:24px;padding:36px;text-align:center;max-width:400px;width:90%;">
         <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-3xl mx-auto mb-4">
             <i class="fas fa-fingerprint"></i>
         </div>
         <h2 class="text-2xl font-extrabold mb-2">Intră în cont</h2>
-        <p class="text-sm mb-6" style="color:#a1a1aa">Trebuie să fii logat pe Viralio pentru a folosi Scheduler-ul.</p>
-        <a href="https://viralio.ro/login?redirect=https://scheduler.viralio.ro"
-           class="block w-full py-3 rounded-xl font-bold text-white text-sm"
-           style="background:linear-gradient(135deg,#4f46e5,#6366f1);">
-            <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Loghează-te pe Viralio
-        </a>
+        <p class="text-sm mb-6" style="color:#a1a1aa">Conectează-te cu contul tău Viralio pentru a folosi Scheduler-ul.</p>
+        <div id="login-error" style="display:none;color:#f87171;font-size:0.8rem;margin-bottom:12px;"></div>
+        <div class="flex justify-center bg-white/5 py-3 rounded-2xl border border-white/10">
+            <div id="g_id_onload"
+                data-client_id="743541351685-br4h5r61n3ai28bbhm9blt34944rju8p.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleCredentialResponse"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large">
+            </div>
+        </div>
         <p class="text-xs mt-4" style="color:#52525b">Contul tău de pe viralio.ro funcționează pe toate aplicațiile.</p>
     </div>
 </div>
@@ -480,10 +495,40 @@ function getToken() {
     const match = document.cookie.match(/(?:^|; )viralio_token=([^;]*)/);
     return match ? decodeURIComponent(match[1]) : null;
 }
+function setToken(token) {
+    document.cookie = `viralio_token=${encodeURIComponent(token)}; domain=.viralio.ro; path=/; max-age=604800; Secure; SameSite=Lax`;
+}
 function removeToken() {
     document.cookie = 'viralio_token=; domain=.viralio.ro; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 function logout() { removeToken(); location.reload(); }
+
+async function handleCredentialResponse(response) {
+    const errEl = document.getElementById('login-error');
+    try {
+        const res  = await fetch('https://viralio.ro/api/auth/google', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (data.token) {
+            setToken(data.token);
+            document.getElementById('login-modal').style.display = 'none';
+            updateNavUI(data.user, data.user.credits);
+            loadUserData();
+        } else if (data.error === 'BETA_FULL') {
+            errEl.style.display = 'block';
+            errEl.textContent   = data.message || 'Beta plin. Ești pe lista de așteptare.';
+        } else {
+            errEl.style.display = 'block';
+            errEl.textContent   = data.error || 'Eroare la login.';
+        }
+    } catch (e) {
+        errEl.style.display = 'block';
+        errEl.textContent   = 'Eroare de conexiune. Încearcă din nou.';
+    }
+}
 
 function updateNavUI(user, credits) {
     document.getElementById('login-top-btn')?.classList.add('hidden');
@@ -535,6 +580,14 @@ const PLATFORMS = [
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    // Preia token din URL dacă vine redirect de la hub
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken  = urlParams.get('token');
+    if (urlToken) {
+        document.cookie = `viralio_token=${encodeURIComponent(urlToken)}; domain=.viralio.ro; path=/; max-age=604800; Secure; SameSite=Lax`;
+        history.replaceState({}, '', window.location.pathname);
+    }
+
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('schedule-date').min   = today;
     document.getElementById('schedule-date').value = today;
